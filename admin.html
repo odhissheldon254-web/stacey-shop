@@ -753,8 +753,12 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="new-image">Image Path</label>
-            <input id="new-image" class="field-input" placeholder="assets/my_product.jpg">
+            <label class="form-label" for="new-image-file">Product Image</label>
+            <input id="new-image-file" type="file" class="field-input" accept="image/*">
+            <input id="new-image" class="field-input" placeholder="assets/my_product.jpg" style="margin-top:0.5rem;">
+            <div style="margin-top:0.6rem;">
+              <img id="new-image-preview" src="assets/logo.jpeg" alt="Product preview" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
+            </div>
           </div>
           <div class="form-group" style="grid-column:1/-1;">
             <label class="form-label" for="new-desc">Description</label>
@@ -845,6 +849,34 @@
   function saveProducts(list) {
     localStorage.setItem('tacey_products', JSON.stringify(list));
   }
+
+  /* ── Image helpers ── */
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error('Could not read image'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  window.handleProductImageUpload = async function(input, productId) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const row = document.querySelector(`.product-row[data-pid="${productId}"]`);
+    if (!row) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const imageInput = row.querySelector('[data-field="image"]');
+      const preview = row.querySelector('.product-row-img');
+      if (imageInput) imageInput.value = dataUrl;
+      if (preview) preview.src = dataUrl;
+      showToast('🖼 Image ready to save', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('⚠️ Could not read this image', 'error');
+    }
+  };
 
   /* ── Toast ── */
   let toastTimer;
@@ -1087,7 +1119,11 @@
               <input type="checkbox" data-field="featured" ${p.featured ? 'checked' : ''}> Featured
             </label>
           </div>
-          <input class="field-input img-input" value="${escHtml(p.image)}" data-field="image" placeholder="assets/image.png">
+          <div class="form-group" style="margin-top:0.5rem;">
+            <label class="form-label" for="img-upload-${p.id}">Upload New Image</label>
+            <input id="img-upload-${p.id}" type="file" class="field-input" accept="image/*" onchange="handleProductImageUpload(this, ${p.id})">
+            <input class="field-input img-input" value="${escHtml(p.image)}" data-field="image" placeholder="assets/image.png" style="margin-top:0.5rem;">
+          </div>
         </div>
         <div class="product-row-actions">
           <button class="row-btn row-btn-save" onclick="saveProduct(${p.id})">💾 Save</button>
@@ -1140,6 +1176,26 @@
 
     // Add Product toggle
     const addForm = document.getElementById('add-product-form');
+    const newImageFile = document.getElementById('new-image-file');
+    const newImageInput = document.getElementById('new-image');
+    const newImagePreview = document.getElementById('new-image-preview');
+
+    if (newImageFile && newImageInput && newImagePreview) {
+      newImageFile.addEventListener('change', async () => {
+        const file = newImageFile.files?.[0];
+        if (!file) return;
+        try {
+          const dataUrl = await readFileAsDataUrl(file);
+          newImageInput.value = dataUrl;
+          newImagePreview.src = dataUrl;
+          showToast('🖼 Image selected', 'success');
+        } catch (error) {
+          console.error(error);
+          showToast('⚠️ Could not read the selected image', 'error');
+        }
+      });
+    }
+
     document.getElementById('add-product-btn').onclick = () => {
       addForm.classList.add('open');
       addForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1150,13 +1206,28 @@
     };
 
     // Save new product
-    document.getElementById('save-new-product-btn').onclick = () => {
+    document.getElementById('save-new-product-btn').onclick = async () => {
       const name  = document.getElementById('new-name').value.trim();
       const price = parseFloat(document.getElementById('new-price').value);
       if (!name)   { showToast('⚠️ Please enter a product name.', 'error'); return; }
       if (!price)  { showToast('⚠️ Please enter a valid price.', 'error'); return; }
 
       const products = loadProducts();
+      const imageInput = document.getElementById('new-image');
+      const fileInput = document.getElementById('new-image-file');
+      const preview = document.getElementById('new-image-preview');
+      let imageValue = imageInput.value.trim();
+
+      if (fileInput.files?.[0]) {
+        try {
+          imageValue = await readFileAsDataUrl(fileInput.files[0]);
+        } catch (error) {
+          console.error(error);
+          showToast('⚠️ Could not read the selected image', 'error');
+          return;
+        }
+      }
+
       const newId = Math.max(...products.map(p => p.id), 0) + 1;
       products.push({
         id: newId,
@@ -1164,7 +1235,7 @@
         price,
         category: document.getElementById('new-category').value,
         gender:   document.getElementById('new-gender').value,
-        image:    document.getElementById('new-image').value.trim() || 'assets/product_sneakers.png',
+        image:    imageValue || 'assets/product_sneakers.png',
         description: document.getElementById('new-desc').value.trim() || '',
         tags: document.getElementById('new-tags').value.split(',').map(t => t.trim()).filter(Boolean),
         inStock:  document.getElementById('new-instock').checked,
@@ -1179,6 +1250,8 @@
       ['new-name','new-price','new-image','new-desc','new-tags'].forEach(id => {
         document.getElementById(id).value = '';
       });
+      if (fileInput) fileInput.value = '';
+      if (preview) preview.src = 'assets/logo.jpeg';
       document.getElementById('new-instock').checked  = true;
       document.getElementById('new-featured').checked = false;
 
