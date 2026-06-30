@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Shop premium shoes, designer bags, and fashion clothing at Tacey Collections. Discover styles that speak for you with instant WhatsApp ordering and delivery.">
+  <meta name="keywords" content="Tacey Collections, Stacey, boutique Kenya, online boutique, footwear Kenya, designer bags, ladies clothes, men shoes, Nairobi fashion">
+  <meta name="author" content="Tacey Collections">
+  <title>Tacey Collections | Style That Speaks For You</title>
+  <link rel="stylesheet" href="index.css">
+  
+  <!-- Preload Critical Image Asset -->
+  <link rel="preload" href="assets/hero_bg.png" as="image">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar" id="main-nav">
+    <div class="nav-brand">
+      <img src="assets/logo.jpeg" alt="Tacey Collections Logo" class="nav-logo-img">
+      <span class="nav-brand-text">Tacey Collections</span>
+    </div>
+    <nav class="nav-links" aria-label="Primary Navigation">
+      <a href="#catalog" class="nav-link">Shop</a>
+      <a href="#about" class="nav-link">About Flyer</a>
+      <button class="nav-link" id="nav-quiz-trigger">Style Matcher</button>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn btn-secondary nav-quiz-btn" id="header-quiz-btn" aria-label="Start Style Quiz">
+        <span>Style Matcher</span>
+      </button>
+      <button class="cart-toggle" id="cart-toggle-btn" aria-label="View shopping cart" aria-expanded="false" aria-controls="cart-drawer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+        </svg>
+        <span class="cart-badge" id="cart-count" aria-live="polite">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Banner Section -->
+    <section class="hero" id="home" aria-label="Welcome banner">
+      <div class="hero-background"></div>
+      <div class="hero-glow-blob"></div>
+      <div class="hero-content">
+        <span class="hero-badge">Curated Collection</span>
+        <h1 class="hero-title">Elevate Your Signature Style</h1>
+        <p class="hero-slogan">Style that speaks for you</p>
+        <p class="hero-desc">
+          Discover a hand-picked collection of premium footwears, high-end designer bags, and stunning clothes tailored to make you stand out. Handcrafted aesthetics, immediate WhatsApp checkout, and seamless delivery.
+        </p>
+        <div class="hero-actions">
+          <a href="#catalog" class="btn btn-primary">
+            <span>Shop Collection</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <button class="btn btn-secondary" id="hero-quiz-btn">
+            <span>Find My Style</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Catalog Section -->
+    <section class="catalog-section" id="catalog" aria-labelledby="catalog-heading">
+      <div class="catalog-controls">
+        <h2 class="sr-only" id="catalog-heading">Product Catalog</h2>
+        <div class="catalog-filters">
+          <!-- Category Tabs -->
+          <div class="filter-tabs" role="tablist" aria-label="Filter by category">
+            <button class="filter-tab active" role="tab" aria-selected="true" data-filter="category" data-value="all">All Items</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Footwear">Footwear</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Bags">Bags</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Clothes">Clothes</button>
+          </div>
+          
+          <!-- Gender Tabs -->
+          <div class="filter-tabs" role="tablist" aria-label="Filter by gender">
+            <button class="filter-tab active" role="tab" aria-selected="true" data-filter="gender" data-value="all">All Genders</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Female">Female</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Male">Male</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Unisex">Unisex</button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="catalog-search-wrap">
+            <label for="product-search" class="sr-only">Search products</label>
+            <input type="search" id="product-search" class="search-input" placeholder="Search by name, tags...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Product Grid -->
+      <div class="product-grid" id="product-grid-container" aria-live="polite">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </section>
+
+    <!-- Instagram / Lifestyle Showcase -->
+    <section class="social-showcase" aria-labelledby="showcase-title">
+      <div class="showcase-container">
+        <div class="section-header">
+          <h2 class="section-title" id="showcase-title">Spotted in Tacey Collections</h2>
+          <p class="section-desc">Get style inspiration from our community on Instagram. Tag us using @tacey_collections to be featured!</p>
+        </div>
+        <div class="instagram-grid">
+          <!-- Card 1: Bag -->
+          <div class="instagram-card">
+            <img src="assets/product_handbag.png" alt="Black quilted leather luxury bag spotted in a boutique" class="instagram-img">
+            <div class="instagram-overlay">
+              <span class="instagram-handle">@tacey_collections</span>
+              <p>Timeless classic luxury. The absolute go-to for standard dinners and formal outings.</p>
+            </div>
+          </div>
+          <!-- Card 2: Sneakers -->
+          <div class="instagram-card">
+            <img src="assets/product_sneakers.png" alt="Black and neon pink high-top sneakers on a street style model" class="instagram-img">
+            <div class="instagram-overlay">
+              <span class="instagram-handle">@tacey_collections</span>
+              <p>Bold streetwear, unmatched comfort. Add that energetic punch of neon to your street look.</p>
+            </div>
+          </div>
+          <!-- Card 3: Dress -->
+          <div class="instagram-card">
+            <img src="assets/product_dress.png" alt="Deep magenta velvet draped dress on display" class="instagram-img">
+            <div class="instagram-overlay">
+              <span class="instagram-handle">@tacey_collections</span>
+              <p>Elegance refined. Turn heads at every gala and event with velvet drapes that flow beautifully.</p>
+            </div>
+          </div>
+          <!-- Card 4: Heels -->
+          <div class="instagram-card">
+            <img src="assets/product_heels.png" alt="Vibrant neon pink designer heels on a glossy showroom floor" class="instagram-img">
+            <div class="instagram-overlay">
+              <span class="instagram-handle">@tacey_collections</span>
+              <p>Hot pink glow. Perfect companion for night outs and whenever you want style that truly speaks.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Original Flyer / About Section -->
+    <section class="flyer-trust-section" id="about" aria-labelledby="about-heading">
+      <div class="flyer-grid">
+        <div class="flyer-text-side">
+          <span class="flyer-badge">Official Flyer Info</span>
+          <h2 class="flyer-title" id="about-heading">Style That Speaks For You</h2>
+          <p class="flyer-slogan">BAGS | FOOTWEARS | CLOTHES</p>
+          <p class="flyer-desc">
+            Tacey Collections is a premier fashion boutique, serving both male and female fashion lovers with top-tier select items. Directly linked with Stacey, our cousin, we prioritize direct communication to guarantee pricing, customization, and swift delivery matching your needs.
+          </p>
+          <div class="flyer-contacts">
+            <div class="contact-item">
+              <span class="contact-icon wa">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+              </span>
+              <span>WhatsApp: <strong>+254 702179011</strong></span>
+            </div>
+            <div class="contact-item">
+              <span class="contact-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+              </span>
+              <span>Instagram: <strong>@tacey_collections</strong></span>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <a href="https://wa.me/254702179011" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer">
+              <span>Chat Direct with Stacey</span>
+            </a>
+          </div>
+        </div>
+        <div class="flyer-img-side">
+          <div class="flyer-img-frame">
+            <!-- Embedding original image as requested by user -->
+            <img src="assets/logo.jpeg" alt="Tacey Collections Original Brand Banner Flyer. BAGS, FOOTWEARS, CLOTHES (Male & Female). Contact: +254702179011" class="flyer-original-img">
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-logo">Tacey <span>Collections</span></div>
+    <p class="footer-desc">Style that speaks for you. Handpicked footwears, clothing and bags supporting authentic customer care and immediate delivery.</p>
+    <div class="footer-socials">
+      <a href="https://instagram.com/tacey_collections" target="_blank" rel="noopener noreferrer" class="footer-social-link" aria-label="Follow Tacey Collections on Instagram">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </a>
+      <a href="https://wa.me/254702179011" target="_blank" rel="noopener noreferrer" class="footer-social-link" aria-label="Chat with Stacey on WhatsApp">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+      </a>
+    </div>
+    <div class="footer-copyright">
+      <p>&copy; 2026 Tacey Collections. Designed for Stacey. All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Product Detail Modal Dialog (Native HTML5) -->
+  <dialog id="product-detail-modal" aria-labelledby="modal-title">
+    <button class="dialog-close" id="close-detail-modal" aria-label="Close modal">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="details-modal-grid" id="modal-content-container">
+      <!-- Injected Dynamically by JS -->
+    </div>
+  </dialog>
+
+  <!-- Cart Drawer Modal Dialog (Native HTML5 sliding dialog) -->
+  <dialog id="cart-drawer" aria-labelledby="cart-drawer-heading">
+    <div class="cart-header">
+      <h2 id="cart-drawer-heading" class="cart-title">Your Order Bag</h2>
+      <button class="dialog-close" id="close-cart-btn" style="position: static;" aria-label="Close cart">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    
+    <div class="cart-items-list" id="cart-items-container">
+      <!-- Injected Dynamically by JS -->
+    </div>
+
+    <div class="cart-footer">
+      <!-- Delivery Section -->
+      <div class="delivery-section">
+        <div class="delivery-section-header">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <span>Doorstep Delivery</span>
+        </div>
+        <label for="delivery-location" class="delivery-label">Select Your Location</label>
+        <select id="delivery-location" class="delivery-select">
+          <option value="pickup" data-fee="0">🏪 Self Pickup (Free)</option>
+          <option value="nairobi_cbd" data-fee="150">📍 Nairobi CBD — KES 150</option>
+          <option value="nairobi_suburbs" data-fee="300">🏘️ Nairobi Suburbs (Westlands, Kilimani…) — KES 300</option>
+          <option value="kiambu_thika" data-fee="400">🚗 Kiambu / Thika — KES 400</option>
+          <option value="mombasa_kisumu" data-fee="500">✈️ Mombasa / Kisumu / Nakuru — KES 500</option>
+          <option value="upcountry" data-fee="600">🗺️ Rest of Kenya (Upcountry) — KES 600</option>
+        </select>
+        <label for="delivery-address" class="delivery-label" id="delivery-address-label" style="margin-top:0.75rem;">Your Doorstep Address</label>
+        <textarea id="delivery-address" class="delivery-address-input" rows="2" placeholder="e.g. Ring Road, Kileleshwa, Apt 4B, Nairobi"></textarea>
+      </div>
+
+      <div class="cart-total-row">
+        <span>Subtotal</span>
+        <span class="cart-total-price" id="cart-subtotal">0</span>
+      </div>
+      <div class="cart-total-row" id="delivery-fee-row" style="font-size:0.9rem; color: var(--color-text-muted);">
+        <span>Delivery Fee</span>
+        <span id="cart-delivery-fee">Free</span>
+      </div>
+      <div class="cart-total-row" style="border-top: 1px solid var(--color-border); padding-top: 0.75rem; margin-top:0.25rem;">
+        <span style="font-size:1rem; font-weight:700;">Total</span>
+        <span class="cart-total-price" id="cart-grand-total" style="font-size:1.1rem;">0</span>
+      </div>
+      <button class="btn btn-whatsapp" id="checkout-whatsapp-btn" style="width: 100%;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+        <span>Confirm Order via WhatsApp</span>
+      </button>
+      <p class="cart-disclaimer">Tacey AI will handle your order. Payment via M-Pesa coordinated by Stacey after confirmation.</p>
+    </div>
+  </dialog>
+
+  <!-- Style Matcher Quiz Modal Dialog -->
+  <dialog id="quiz-modal" aria-labelledby="quiz-modal-heading">
+    <button class="dialog-close" id="close-quiz-modal" aria-label="Close quiz">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="quiz-wizard">
+      <div class="quiz-header">
+        <h2 id="quiz-modal-heading" class="cart-title">Style Matcher</h2>
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" id="quiz-progress"></div>
+        </div>
+      </div>
+      
+      <!-- Step 1: Target Gender -->
+      <div class="quiz-step active" data-step="1">
+        <p class="quiz-question">Who are we styling today?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-answer="gender" data-value="Female">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Myself (Female) / Shopping for Her</span>
+          </button>
+          <button class="quiz-option" data-answer="gender" data-value="Male">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Myself (Male) / Shopping for Him</span>
+          </button>
+          <button class="quiz-option" data-answer="gender" data-value="Unisex">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Looking for unisex streetwear & versatile fits</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Occasion -->
+      <div class="quiz-step" data-step="2">
+        <p class="quiz-question">What is the primary occasion for these items?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-answer="occasion" data-value="casual">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Casual outings & stylish street fashion</span>
+          </button>
+          <button class="quiz-option" data-answer="occasion" data-value="formal">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Formal work settings, meetings & elegance</span>
+          </button>
+          <button class="quiz-option" data-answer="occasion" data-value="glam">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Special galas, night outs & showstoppers</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Product Category -->
+      <div class="quiz-step" data-step="3">
+        <p class="quiz-question">Which item type is calling your name?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-answer="category" data-value="Footwear">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Footwears (Sneakers, Heels, Boots)</span>
+          </button>
+          <button class="quiz-option" data-answer="category" data-value="Bags">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Bags (Luxury leather, Handbags)</span>
+          </button>
+          <button class="quiz-option" data-answer="category" data-value="Clothes">
+            <span class="quiz-option-bullet"></span>
+            <span class="quiz-option-text">Clothes (Designer dresses, Premium fits)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Results -->
+      <div class="quiz-step" data-step="4" id="quiz-results-container">
+        <!-- Result items injected dynamically -->
+      </div>
+
+      <div class="quiz-footer">
+        <button class="btn btn-ghost" id="quiz-prev-btn" style="visibility: hidden;">
+          <span>Back</span>
+        </button>
+        <div style="font-size: 0.85rem; color: var(--color-text-muted); align-self: center;" id="quiz-step-indicator">Step 1 of 3</div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Tacey AI Floating Chat Widget ===== -->
+  <div id="tacey-ai-widget" aria-label="Tacey AI Stylist Chat">
+    <!-- Floating Trigger Bubble -->
+    <button class="ai-bubble-btn" id="ai-bubble-btn" aria-expanded="false" aria-controls="ai-chat-window" aria-label="Chat with Tacey AI Stylist">
+      <span class="ai-bubble-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </span>
+      <span class="ai-bubble-label">Ask Tacey AI</span>
+      <span class="ai-pulse-ring"></span>
+    </button>
+
+    <!-- Chat Window -->
+    <div class="ai-chat-window" id="ai-chat-window" role="dialog" aria-labelledby="ai-chat-heading" hidden>
+      <div class="ai-chat-header">
+        <div class="ai-chat-header-info">
+          <div class="ai-avatar">
+            <img src="assets/logo.jpeg" alt="Tacey AI" class="ai-avatar-img">
+            <span class="ai-online-dot" aria-hidden="true"></span>
+          </div>
+          <div>
+            <h3 class="ai-chat-title" id="ai-chat-heading">Tacey AI Stylist</h3>
+            <span class="ai-chat-subtitle">Always online · Powered by your catalog</span>
+          </div>
+        </div>
+        <button class="ai-chat-close" id="ai-chat-close" aria-label="Close chat">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Message Scroll Area -->
+      <div class="ai-messages" id="ai-messages" aria-live="polite" aria-atomic="false"></div>
+
+      <!-- Quick Reply Chips -->
+      <div class="ai-chips" id="ai-chips">
+        <button class="ai-chip" data-msg="What shoes do you have?">👟 Show shoes</button>
+        <button class="ai-chip" data-msg="What bags are available?">👜 Show bags</button>
+        <button class="ai-chip" data-msg="Show me dresses">👗 Show dresses</button>
+        <button class="ai-chip" data-msg="How does delivery work?">🚚 Delivery info</button>
+        <button class="ai-chip" data-msg="What are your prices?">💰 Prices</button>
+      </div>
+
+      <!-- Input Bar -->
+      <form class="ai-input-bar" id="ai-input-bar" autocomplete="off">
+        <label for="ai-input" class="sr-only">Type your question</label>
+        <input type="text" id="ai-input" class="ai-input" placeholder="Ask about shoes, bags, delivery…" maxlength="200">
+        <button type="submit" class="ai-send-btn" aria-label="Send message">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

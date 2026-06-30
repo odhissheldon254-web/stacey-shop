@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sneakers",
+    "name": "Urban Tech Neon Sneakers",
+    "category": "Footwear",
+    "gender": "Unisex",
+    "price": 4200,
+    "image": "assets/product_sneakers.png",
+    "description": "High-top breathable streetwear sneakers with neon pink highlights. Designed with premium responsive cushioning and durable tech laces for unmatched style and fit.",
+    "sizes": [38, 39, 40, 41, 42, 43, 44],
+    "colors": ["Black Neon", "Triple Black"],
+    "occasion": "casual"
+  },
+  {
+    "id": "handbag",
+    "name": "Lumière Quilted Handbag",
+    "category": "Bags",
+    "gender": "Female",
+    "price": 3800,
+    "image": "assets/product_handbag.png",
+    "description": "Exquisite textured black leather handbag with a gold-tone interlocking clasp and elegant chain-link shoulder strap. Features multiple inner compartments for luxury organization.",
+    "sizes": ["Standard"],
+    "colors": ["Noir Gold", "Blush Gold"],
+    "occasion": "formal"
+  },
+  {
+    "id": "dress",
+    "name": "Luna Velvet Gala Gown",
+    "category": "Clothes",
+    "gender": "Female",
+    "price": 6500,
+    "image": "assets/product_dress.png",
+    "description": "Stunning one-shoulder evening gown made of rich velvet fabric. Form-fitting bodice cascading into a dramatic drape with a daring side split. Perfect for showstopping elegance.",
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Royal Crimson", "Midnight Emerald"],
+    "occasion": "glam"
+  },
+  {
+    "id": "heels",
+    "name": "Starlight Neon Stilettos",
+    "category": "Footwear",
+    "gender": "Female",
+    "price": 4500,
+    "image": "assets/product_heels.png",
+    "description": "Premium glossy neon pink high heels with a sharp metallic stiletto heel and adjustable ankle strap. Perfect for making a bold fashion statement on any night out.",
+    "sizes": [36, 37, 38, 39, 40, 41],
+    "colors": ["Shocking Pink", "Electric Blue"],
+    "occasion": "glam"
+  }
+]
