@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tacey Collections — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --bg:        hsl(240 16% 5%);
+      --surface:   hsl(240 14% 9%);
+      --surface2:  hsl(240 12% 14%);
+      --border:    hsl(240 10% 18% / 0.8);
+      --primary:   hsl(334 100% 58%);
+      --primary-g: hsl(334 100% 58% / 0.45);
+      --accent:    hsl(35 60% 65%);
+      --success:   hsl(145 80% 45%);
+      --error:     hsl(355 85% 55%);
+      --text:      hsl(0 0% 95%);
+      --muted:     hsl(240 5% 60%);
+      --font-h:    'Outfit', sans-serif;
+      --font-b:    'Inter', sans-serif;
+      --tr:        0.2s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-b);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(circle at 15% 25%, hsl(334 100% 58% / 0.05) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, hsl(35 60% 65% / 0.04) 0%, transparent 45%);
+    }
+
+    /* ── Shared ── */
+    h1,h2,h3 { font-family: var(--font-h); font-weight: 700; letter-spacing: -0.02em; }
+    button { cursor: pointer; border: none; font: inherit; }
+    input, textarea, select { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    .sr-only {
+      position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;
+    }
+
+    /* ── Screens ── */
+    .screen {
+      display: none;
+      min-height: 100dvh;
+    }
+    .screen.active { display: flex; }
+
+    /* ── Auth screens (setup + login) ── */
+    .auth-screen {
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      flex-direction: column;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 30px var(--primary-g);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), hsl(300 100% 50%));
+    }
+
+    .auth-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary);
+      box-shadow: 0 0 20px var(--primary-g);
+      display: block;
+      margin: 0 auto 1.25rem;
+    }
+
+    .auth-title {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .auth-sub {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border var(--tr), box-shadow var(--tr);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-g);
+    }
+
+    /* PIN dots display */
+    .pin-dots {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin: 1.25rem 0;
+    }
+
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: transparent;
+      transition: all var(--tr);
+    }
+
+    .pin-dot.filled {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary-g);
+    }
+
+    /* PIN Keypad */
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+    }
+
+    .pin-key {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 1rem 0;
+      font-family: var(--font-h);
+      font-size: 1.2rem;
+      font-weight: 600;
+      transition: all var(--tr);
+      text-align: center;
+      min-height: 56px;
+      display: grid;
+      place-items: center;
+    }
+
+    .pin-key:hover { background: var(--surface); border-color: var(--primary-g); }
+    .pin-key:active { transform: scale(0.95); }
+
+    .pin-key.zero {
+      grid-column: 2;
+    }
+
+    .pin-key.backspace {
+      background: hsl(355 85% 55% / 0.1);
+      border-color: hsl(355 85% 55% / 0.3);
+      color: var(--error);
+      grid-column: 3;
+    }
+
+    .pin-key.backspace:hover {
+      background: hsl(355 85% 55% / 0.2);
+    }
+
+    .btn-auth {
+      width: 100%;
+      padding: 0.9rem;
+      border-radius: 10px;
+      font-family: var(--font-h);
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 1rem;
+      transition: all var(--tr);
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, hsl(300 100% 45%) 100%);
+      color: #fff;
+      box-shadow: 0 0 20px var(--primary-g);
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px var(--primary-g); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+
+    .btn-danger {
+      background: hsl(355 85% 55% / 0.12);
+      border: 1px solid hsl(355 85% 55% / 0.4);
+      color: var(--error);
+    }
+
+    .btn-danger:hover { background: hsl(355 85% 55% / 0.2); }
+
+    .btn-success {
+      background: hsl(145 80% 45% / 0.15);
+      border: 1px solid hsl(145 80% 45% / 0.4);
+      color: var(--success);
+    }
+
+    .btn-success:hover { background: hsl(145 80% 45% / 0.25); }
+
+    .auth-error {
+      background: hsl(355 85% 55% / 0.12);
+      border: 1px solid hsl(355 85% 55% / 0.35);
+      border-radius: 8px;
+      padding: 0.65rem 1rem;
+      font-size: 0.875rem;
+      color: var(--error);
+      margin-top: 0.75rem;
+      text-align: center;
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      25%{transform:translateX(-6px)}
+      75%{transform:translateX(6px)}
+    }
+
+    /* ── Dashboard screen ── */
+    #screen-dashboard {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dash-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9,9,14,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .dash-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .dash-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 12px var(--primary-g);
+    }
+
+    .dash-brand-text {
+      font-family: var(--font-h);
+      font-weight: 800;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, var(--text) 40%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dash-nav-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .dash-btn {
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: all var(--tr);
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: var(--font-b);
+    }
+
+    .dash-btn-outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--muted);
+    }
+
+    .dash-btn-outline:hover { border-color: var(--muted); color: var(--text); }
+
+    .dash-btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 10px var(--primary-g);
+    }
+
+    .dash-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 18px var(--primary-g); }
+
+    .dash-btn-danger {
+      background: hsl(355 85% 55% / 0.1);
+      border-color: hsl(355 85% 55% / 0.35);
+      color: var(--error);
+    }
+
+    .dash-btn-danger:hover { background: hsl(355 85% 55% / 0.2); }
+
+    /* ── Dashboard content ── */
+    .dash-content {
+      flex: 1;
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .dash-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: var(--font-h);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    .dash-section-title {
+      font-family: var(--font-h);
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── Product List ── */
+    .product-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .product-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      gap: 1.1rem;
+      align-items: start;
+      transition: border-color var(--tr);
+    }
+
+    .product-row:hover { border-color: var(--primary-g); }
+
+    .product-row-img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .product-row-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .field-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: border var(--tr), box-shadow var(--tr);
+      width: 100%;
+    }
+
+    .field-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary-g);
+    }
+
+    .field-input.price-input {
+      width: 120px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .field-input.img-input {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      accent-color: var(--primary);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .select-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.45rem 0.65rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .product-row-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 90px;
+    }
+
+    .row-btn {
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: var(--font-b);
+      transition: all var(--tr);
+      text-align: center;
+    }
+
+    .row-btn-save {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 8px var(--primary-g);
+    }
+
+    .row-btn-save:hover { transform: translateY(-1px); }
+
+    .row-btn-del {
+      background: hsl(355 85% 55% / 0.1);
+      border-color: hsl(355 85% 55% / 0.3);
+      color: var(--error);
+    }
+
+    .row-btn-del:hover { background: hsl(355 85% 55% / 0.2); }
+
+    /* ── Add product form ── */
+    .add-product-card {
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+      display: none;
+    }
+
+    .add-product-card.open { display: block; }
+
+    .add-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 580px) {
+      .add-grid { grid-template-columns: 1fr; }
+      .product-row { grid-template-columns: 60px 1fr; }
+      .product-row-actions { flex-direction: row; grid-column: 1/-1; }
+    }
+
+    /* ── Passcode Change section ── */
+    .passcode-change-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Toast notification ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      z-index: 9999;
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+      white-space: nowrap;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { color: var(--success); border-color: hsl(145 80% 45% / 0.4); }
+    #toast.error   { color: var(--error);   border-color: hsl(355 85% 55% / 0.4); }
+
+    /* Focus ring */
+    :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+
+    /* Scrollbar */
+    html { scrollbar-color: var(--primary-g) var(--surface); scrollbar-width: thin; }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================
+       SCREEN 1: FIRST-TIME SETUP (create passcode)
+       ====================================================== -->
+  <div class="screen auth-screen" id="screen-setup">
+    <div class="auth-card">
+      <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
+      <h1 class="auth-title">Welcome, Stacey! 👋</h1>
+      <p class="auth-sub">This is your private admin panel. Let's create your secret passcode to protect it.</p>
+
+      <div id="setup-step-1">
+        <p style="font-size:0.85rem;color:var(--muted);text-align:center;margin-bottom:0.5rem;">Choose a 4-digit PIN</p>
+        <div class="pin-dots" id="setup-dots-1"></div>
+        <div class="pin-keypad" id="setup-keypad-1"></div>
+      </div>
+
+      <div id="setup-step-2" style="display:none;">
+        <p style="font-size:0.85rem;color:var(--muted);text-align:center;margin-bottom:0.5rem;">Confirm your PIN</p>
+        <div class="pin-dots" id="setup-dots-2"></div>
+        <div class="pin-keypad" id="setup-keypad-2"></div>
+      </div>
+
+      <div id="setup-error" style="display:none;" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       SCREEN 2: LOGIN
+       ====================================================== -->
+  <div class="screen auth-screen" id="screen-login">
+    <div class="auth-card">
+      <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
+      <h1 class="auth-title">Admin Access 🔐</h1>
+      <p class="auth-sub">Enter your PIN to manage Tacey Collections</p>
+
+      <div class="pin-dots" id="login-dots"></div>
+      <div class="pin-keypad" id="login-keypad"></div>
+
+      <div id="login-error" style="display:none;" class="auth-error"></div>
+
+      <p style="text-align:center;margin-top:1.25rem;font-size:0.78rem;color:var(--muted);">
+        Forgot your PIN? <a id="forgot-link" href="#" style="color:var(--primary);text-decoration:underline;">Reset it</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       SCREEN 3: FORGOT / RESET PASSCODE
+       ====================================================== -->
+  <div class="screen auth-screen" id="screen-forgot">
+    <div class="auth-card">
+      <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
+      <h1 class="auth-title">Reset PIN 🔑</h1>
+      <p class="auth-sub">Enter the master reset key to clear your PIN and start over.</p>
+
+      <div class="form-group">
+        <label class="form-label" for="reset-key-input">Master Reset Key</label>
+        <input type="password" id="reset-key-input" class="form-input" placeholder="Enter reset key…" autocomplete="off">
+        <p style="font-size:0.76rem;color:var(--muted);margin-top:0.4rem;">
+          The reset key is: <strong style="color:var(--accent);">tacey2024reset</strong><br>
+          (Keep this private — share only with your trusted family member)
+        </p>
+      </div>
+
+      <button class="btn-auth btn-primary" id="reset-submit-btn">Verify & Reset PIN</button>
+      <button class="btn-auth btn-ghost" id="back-to-login-btn" style="margin-top:0.5rem;">← Back to Login</button>
+      <div id="reset-error" style="display:none;" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       SCREEN 4: DASHBOARD
+       ====================================================== -->
+  <div class="screen" id="screen-dashboard">
+
+    <!-- Nav Bar -->
+    <nav class="dash-navbar">
+      <div class="dash-brand">
+        <img src="assets/logo.jpeg" alt="Tacey Collections" class="dash-logo">
+        <span class="dash-brand-text">Tacey Admin</span>
+      </div>
+      <div class="dash-nav-actions">
+        <a href="index.html" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-outline">
+          🌐 View Live Site
+        </a>
+        <button id="change-pin-toggle" class="dash-btn dash-btn-outline">🔑 Change PIN</button>
+        <button id="logout-btn" class="dash-btn dash-btn-danger">🚪 Logout</button>
+      </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dash-content">
+
+      <!-- Stats -->
+      <div class="dash-stats" id="dash-stats"></div>
+
+      <!-- Change PIN Section (hidden by default) -->
+      <div class="passcode-change-card" id="change-pin-section" style="display:none;">
+        <h2 class="dash-section-title">🔑 Change Your PIN</h2>
+        <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">Choose a new 4-digit PIN for your admin panel.</p>
+        <div id="change-step-1">
+          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem;">New PIN</p>
+          <div class="pin-dots" id="change-dots-1"></div>
+          <div class="pin-keypad" id="change-keypad-1"></div>
+        </div>
+        <div id="change-step-2" style="display:none;margin-top:1rem;">
+          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem;">Confirm New PIN</p>
+          <div class="pin-dots" id="change-dots-2"></div>
+          <div class="pin-keypad" id="change-keypad-2"></div>
+        </div>
+        <div id="change-error" style="display:none;" class="auth-error"></div>
+        <button class="dash-btn dash-btn-outline" id="cancel-change-pin" style="margin-top:1rem;width:100%;">Cancel</button>
+      </div>
+
+      <!-- Add Product -->
+      <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <button id="add-product-btn" class="dash-btn dash-btn-primary">+ Add New Product</button>
+        <button id="reset-products-btn" class="dash-btn dash-btn-danger">↺ Reset to Defaults</button>
+      </div>
+
+      <!-- Add Product Form -->
+      <div class="add-product-card" id="add-product-form">
+        <h3 style="font-family:var(--font-h);font-size:1.1rem;margin-bottom:0.25rem;">New Product</h3>
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;">Fill in the details below then click Save.</p>
+        <div class="add-grid">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label" for="new-name">Product Name</label>
+            <input id="new-name" class="field-input" placeholder="e.g. Glossy White Sneakers">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-price">Price (KES)</label>
+            <input id="new-price" type="number" class="field-input" placeholder="3500" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-category">Category</label>
+            <select id="new-category" class="field-input select-input">
+              <option>Footwear</option>
+              <option>Bags</option>
+              <option>Clothes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-gender">Gender</label>
+            <select id="new-gender" class="field-input select-input">
+              <option>Female</option>
+              <option>Male</option>
+              <option>Unisex</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-image-file">Product Image</label>
+            <input id="new-image-file" type="file" class="field-input" accept="image/*">
+            <input id="new-image" class="field-input" placeholder="assets/my_product.jpg" style="margin-top:0.5rem;">
+            <div style="margin-top:0.6rem;">
+              <img id="new-image-preview" src="assets/logo.jpeg" alt="Product preview" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
+            </div>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label" for="new-desc">Description</label>
+            <textarea id="new-desc" class="field-input" rows="3" placeholder="Short product description…" style="resize:vertical;"></textarea>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label" for="new-tags">Tags (comma-separated)</label>
+            <input id="new-tags" class="field-input" placeholder="sneakers, white, casual, women">
+          </div>
+          <div style="display:flex;gap:1rem;align-items:center;grid-column:1/-1;">
+            <label class="checkbox-label">
+              <input type="checkbox" id="new-instock" checked> In Stock
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="new-featured"> Featured
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+          <button id="save-new-product-btn" class="dash-btn dash-btn-primary">💾 Save Product</button>
+          <button id="cancel-add-btn" class="dash-btn dash-btn-outline">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Product List -->
+      <h2 class="dash-section-title">📦 Current Products</h2>
+      <div class="product-list" id="dash-product-list"></div>
+
+    </div><!-- /dash-content -->
+  </div><!-- /screen-dashboard -->
+
+  <!-- Toast -->
+  <div id="toast" role="alert" aria-live="polite"></div>
+
+  <script>
+  /* ============================================================
+     ADMIN PANEL — JavaScript
+     ============================================================ */
+
+  const MASTER_RESET_KEY = 'tacey2024reset';
+  const PIN_KEY          = 'tacey_admin_pin_hash';
+  const SESSION_KEY      = 'tacey_admin_session';
+  const SESSION_TTL      = 4 * 60 * 60 * 1000; // 4 hours
+
+  /* ── Simple hash (not cryptographic, sufficient for local app) ── */
+  function simpleHash(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h * 0x01000193) >>> 0;
+    }
+    return h.toString(16);
+  }
+
+  /* ── Session helpers ── */
+  function createSession() {
+    sessionStorage.setItem(SESSION_KEY, Date.now().toString());
+  }
+
+  function isSessionValid() {
+    const t = sessionStorage.getItem(SESSION_KEY);
+    if (!t) return false;
+    return (Date.now() - parseInt(t, 10)) < SESSION_TTL;
+  }
+
+  function destroySession() {
+    sessionStorage.removeItem(SESSION_KEY);
+  }
+
+  /* ── PIN storage ── */
+  function getStoredHash() { return localStorage.getItem(PIN_KEY); }
+  function storeHash(pin)  { localStorage.setItem(PIN_KEY, simpleHash(pin)); }
+  function checkPin(pin)   { return simpleHash(pin) === getStoredHash(); }
+  function clearPin()      { localStorage.removeItem(PIN_KEY); }
+
+  /* ── Products ── */
+  const DEFAULT_PRODUCTS = [
+    { id:1, name:"Neon Pulse Streetwear Sneakers", category:"Footwear", gender:"Unisex", price:4500, image:"assets/product_sneakers.png", description:"Bold black streetwear sneakers with neon pink highlights.", tags:["sneakers","shoes","streetwear"], inStock:true, featured:true },
+    { id:2, name:"Luxe Quilted Leather Handbag",   category:"Bags",     gender:"Female", price:6800, image:"assets/product_handbag.png",  description:"Timeless black quilted leather bag with gold chain strap.", tags:["bag","handbag","luxury"], inStock:true, featured:true },
+    { id:3, name:"Velvet Drape Evening Gown",       category:"Clothes",  gender:"Female", price:8200, image:"assets/product_dress.png",    description:"Deep magenta velvet gown with elegant draping.",    tags:["dress","gown","formal"], inStock:true, featured:false },
+    { id:4, name:"Neon Stiletto High Heels",        category:"Footwear", gender:"Female", price:5200, image:"assets/product_heels.png",    description:"Hot pink glossy stiletto heels with a sleek metallic base.", tags:["heels","shoes","pink"], inStock:true, featured:true }
+  ];
+
+  function loadProducts() {
+    return JSON.parse(localStorage.getItem('tacey_products') || 'null') || DEFAULT_PRODUCTS;
+  }
+
+  function saveProducts(list) {
+    localStorage.setItem('tacey_products', JSON.stringify(list));
+  }
+
+  /* ── Image helpers ── */
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error('Could not read image'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  window.handleProductImageUpload = async function(input, productId) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const row = document.querySelector(`.product-row[data-pid="${productId}"]`);
+    if (!row) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const imageInput = row.querySelector('[data-field="image"]');
+      const preview = row.querySelector('.product-row-img');
+      if (imageInput) imageInput.value = dataUrl;
+      if (preview) preview.src = dataUrl;
+      showToast('🖼 Image ready to save', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('⚠️ Could not read this image', 'error');
+    }
+  };
+
+  /* ── Toast ── */
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = ''; }, 2800);
+  }
+
+  /* ── Screen Router ── */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  /* ── PIN Keypad Builder ── */
+  function buildKeypad(containerId, dotContainerId, length, onComplete) {
+    let pin = '';
+
+    // Render dots
+    const dotCont = document.getElementById(dotContainerId);
+    dotCont.innerHTML = Array.from({length}, (_,i) => `<div class="pin-dot" id="${dotContainerId}-dot-${i}"></div>`).join('');
+
+    function updateDots() {
+      for (let i = 0; i < length; i++) {
+        const dot = document.getElementById(`${dotContainerId}-dot-${i}`);
+        dot?.classList.toggle('filled', i < pin.length);
+      }
+    }
+
+    function press(val) {
+      if (val === 'back') {
+        pin = pin.slice(0, -1);
+        updateDots();
+        return;
+      }
+      if (pin.length >= length) return;
+      pin += val;
+      updateDots();
+      if (pin.length === length) {
+        setTimeout(() => {
+          const captured = pin;
+          pin = '';
+          updateDots();
+          onComplete(captured);
+        }, 200);
+      }
+    }
+
+    // Render keypad
+    const kp = document.getElementById(containerId);
+    kp.innerHTML = '';
+    [1,2,3,4,5,6,7,8,9].forEach(n => {
+      const btn = document.createElement('button');
+      btn.className = 'pin-key';
+      btn.textContent = n;
+      btn.type = 'button';
+      btn.addEventListener('click', () => press(String(n)));
+      kp.appendChild(btn);
+    });
+
+    // 0 key
+    const zeroBtn = document.createElement('button');
+    zeroBtn.className = 'pin-key zero';
+    zeroBtn.textContent = '0';
+    zeroBtn.type = 'button';
+    zeroBtn.addEventListener('click', () => press('0'));
+    kp.appendChild(zeroBtn);
+
+    // Backspace key
+    const backBtn = document.createElement('button');
+    backBtn.className = 'pin-key backspace';
+    backBtn.innerHTML = '⌫';
+    backBtn.type = 'button';
+    backBtn.addEventListener('click', () => press('back'));
+    kp.appendChild(backBtn);
+  }
+
+  /* ── Setup Screen ── */
+  let setupPin1 = '';
+
+  function initSetupScreen() {
+    showScreen('screen-setup');
+
+    // Step 1: enter new PIN
+    buildKeypad('setup-keypad-1', 'setup-dots-1', 4, pin => {
+      setupPin1 = pin;
+      document.getElementById('setup-step-1').style.display = 'none';
+      document.getElementById('setup-step-2').style.display = 'block';
+    });
+
+    // Step 2: confirm PIN
+    buildKeypad('setup-keypad-2', 'setup-dots-2', 4, pin => {
+      const errEl = document.getElementById('setup-error');
+      if (pin !== setupPin1) {
+        errEl.style.display = 'block';
+        errEl.textContent = "❌ PINs don't match. Please try again.";
+        void errEl.offsetWidth; // reset animation
+        errEl.style.animation = 'none';
+        requestAnimationFrame(() => { errEl.style.animation = ''; });
+        // Reset back to step 1
+        setTimeout(() => {
+          setupPin1 = '';
+          errEl.style.display = 'none';
+          document.getElementById('setup-step-2').style.display = 'none';
+          document.getElementById('setup-step-1').style.display = 'block';
+        }, 1400);
+        return;
+      }
+      storeHash(pin);
+      createSession();
+      showToast('✅ PIN created! Welcome, Stacey!', 'success');
+      showDashboard();
+    });
+  }
+
+  /* ── Login Screen ── */
+  let loginAttempts = 0;
+
+  function initLoginScreen() {
+    showScreen('screen-login');
+    loginAttempts = 0;
+
+    buildKeypad('login-keypad', 'login-dots', 4, pin => {
+      if (checkPin(pin)) {
+        loginAttempts = 0;
+        document.getElementById('login-error').style.display = 'none';
+        createSession();
+        showToast('Welcome back, Stacey! 💅', 'success');
+        showDashboard();
+      } else {
+        loginAttempts++;
+        const errEl = document.getElementById('login-error');
+        errEl.style.display = 'block';
+        const remaining = Math.max(0, 5 - loginAttempts);
+        errEl.textContent = loginAttempts >= 5
+          ? '🔒 Too many attempts. Click "Forgot your PIN" to reset.'
+          : `❌ Wrong PIN. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
+        void errEl.offsetWidth;
+        errEl.style.animation = 'none';
+        requestAnimationFrame(() => { errEl.style.animation = ''; });
+      }
+    });
+
+    document.getElementById('forgot-link').onclick = e => {
+      e.preventDefault();
+      initForgotScreen();
+    };
+  }
+
+  /* ── Forgot Screen ── */
+  function initForgotScreen() {
+    showScreen('screen-forgot');
+    document.getElementById('reset-key-input').value = '';
+    document.getElementById('reset-error').style.display = 'none';
+
+    document.getElementById('reset-submit-btn').onclick = () => {
+      const key = document.getElementById('reset-key-input').value.trim();
+      if (key !== MASTER_RESET_KEY) {
+        const errEl = document.getElementById('reset-error');
+        errEl.style.display = 'block';
+        errEl.textContent = '❌ Wrong reset key. Try again or contact your family admin.';
+        return;
+      }
+      clearPin();
+      showToast('PIN cleared. Please set a new one.', 'success');
+      initSetupScreen();
+    };
+
+    document.getElementById('back-to-login-btn').onclick = initLoginScreen;
+  }
+
+  /* ── Dashboard ── */
+  function showDashboard() {
+    showScreen('screen-dashboard');
+    renderStats();
+    renderProductList();
+    initChangePinSection();
+    bindDashboardButtons();
+  }
+
+  function renderStats() {
+    const products = loadProducts();
+    const inStock  = products.filter(p => p.inStock).length;
+    const outOfStk = products.filter(p => !p.inStock).length;
+    const featured = products.filter(p => p.featured).length;
+    const totalVal = products.filter(p => p.inStock).reduce((s, p) => s + p.price, 0);
+
+    document.getElementById('dash-stats').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-number">${products.length}</div>
+        <div class="stat-label">Total Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--success);">${inStock}</div>
+        <div class="stat-label">In Stock</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--error);">${outOfStk}</div>
+        <div class="stat-label">Out of Stock</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent);">${featured}</div>
+        <div class="stat-label">Featured</div>
+      </div>
+    `;
+  }
+
+  function renderProductList() {
+    const products = loadProducts();
+    const list = document.getElementById('dash-product-list');
+    if (!list) return;
+
+    if (!products.length) {
+      list.innerHTML = `<p style="color:var(--muted);text-align:center;padding:2rem;">No products yet. Add one above!</p>`;
+      return;
+    }
+
+    list.innerHTML = products.map(p => `
+      <div class="product-row" data-pid="${p.id}">
+        <img src="${p.image}" alt="${p.name}" class="product-row-img" onerror="this.src='assets/logo.jpeg'">
+        <div class="product-row-fields">
+          <input class="field-input" value="${escHtml(p.name)}"  data-field="name"     placeholder="Product name">
+          <div class="field-row">
+            <input class="field-input price-input" type="number" value="${p.price}" data-field="price" min="0" placeholder="Price">
+            <select class="field-input select-input" data-field="category" style="min-width:100px;">
+              ${['Footwear','Bags','Clothes'].map(c => `<option ${p.category===c?'selected':''}>${c}</option>`).join('')}
+            </select>
+            <select class="field-input select-input" data-field="gender" style="min-width:90px;">
+              ${['Female','Male','Unisex'].map(g => `<option ${p.gender===g?'selected':''}>${g}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field-row">
+            <label class="checkbox-label">
+              <input type="checkbox" data-field="inStock"  ${p.inStock  ? 'checked' : ''}> In Stock
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" data-field="featured" ${p.featured ? 'checked' : ''}> Featured
+            </label>
+          </div>
+          <div class="form-group" style="margin-top:0.5rem;">
+            <label class="form-label" for="img-upload-${p.id}">Upload New Image</label>
+            <input id="img-upload-${p.id}" type="file" class="field-input" accept="image/*" onchange="handleProductImageUpload(this, ${p.id})">
+            <input class="field-input img-input" value="${escHtml(p.image)}" data-field="image" placeholder="assets/image.png" style="margin-top:0.5rem;">
+          </div>
+        </div>
+        <div class="product-row-actions">
+          <button class="row-btn row-btn-save" onclick="saveProduct(${p.id})">💾 Save</button>
+          <button class="row-btn row-btn-del"  onclick="deleteProduct(${p.id})">🗑 Del</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  window.saveProduct = function(id) {
+    const products = loadProducts();
+    const row = document.querySelector(`.product-row[data-pid="${id}"]`);
+    if (!row) return;
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+
+    p.name     = row.querySelector('[data-field="name"]')?.value.trim()   || p.name;
+    p.price    = parseFloat(row.querySelector('[data-field="price"]')?.value) || p.price;
+    p.category = row.querySelector('[data-field="category"]')?.value       || p.category;
+    p.gender   = row.querySelector('[data-field="gender"]')?.value         || p.gender;
+    p.image    = row.querySelector('[data-field="image"]')?.value.trim()   || p.image;
+    p.inStock  = row.querySelector('[data-field="inStock"]')?.checked  ?? p.inStock;
+    p.featured = row.querySelector('[data-field="featured"]')?.checked ?? p.featured;
+
+    saveProducts(products);
+    renderStats();
+    showToast(`✅ "${p.name}" saved!`, 'success');
+  };
+
+  window.deleteProduct = function(id) {
+    const products = loadProducts();
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+    saveProducts(products.filter(x => x.id !== id));
+    renderStats();
+    renderProductList();
+    showToast(`🗑 "${p.name}" deleted.`, 'error');
+  };
+
+  function bindDashboardButtons() {
+    // Logout
+    document.getElementById('logout-btn').onclick = () => {
+      destroySession();
+      initLoginScreen();
+    };
+
+    // Add Product toggle
+    const addForm = document.getElementById('add-product-form');
+    const newImageFile = document.getElementById('new-image-file');
+    const newImageInput = document.getElementById('new-image');
+    const newImagePreview = document.getElementById('new-image-preview');
+
+    if (newImageFile && newImageInput && newImagePreview) {
+      newImageFile.addEventListener('change', async () => {
+        const file = newImageFile.files?.[0];
+        if (!file) return;
+        try {
+          const dataUrl = await readFileAsDataUrl(file);
+          newImageInput.value = dataUrl;
+          newImagePreview.src = dataUrl;
+          showToast('🖼 Image selected', 'success');
+        } catch (error) {
+          console.error(error);
+          showToast('⚠️ Could not read the selected image', 'error');
+        }
+      });
+    }
+
+    document.getElementById('add-product-btn').onclick = () => {
+      addForm.classList.add('open');
+      addForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    document.getElementById('cancel-add-btn').onclick = () => {
+      addForm.classList.remove('open');
+    };
+
+    // Save new product
+    document.getElementById('save-new-product-btn').onclick = async () => {
+      const name  = document.getElementById('new-name').value.trim();
+      const price = parseFloat(document.getElementById('new-price').value);
+      if (!name)   { showToast('⚠️ Please enter a product name.', 'error'); return; }
+      if (!price)  { showToast('⚠️ Please enter a valid price.', 'error'); return; }
+
+      const products = loadProducts();
+      const imageInput = document.getElementById('new-image');
+      const fileInput = document.getElementById('new-image-file');
+      const preview = document.getElementById('new-image-preview');
+      let imageValue = imageInput.value.trim();
+
+      if (fileInput.files?.[0]) {
+        try {
+          imageValue = await readFileAsDataUrl(fileInput.files[0]);
+        } catch (error) {
+          console.error(error);
+          showToast('⚠️ Could not read the selected image', 'error');
+          return;
+        }
+      }
+
+      const newId = Math.max(...products.map(p => p.id), 0) + 1;
+      products.push({
+        id: newId,
+        name,
+        price,
+        category: document.getElementById('new-category').value,
+        gender:   document.getElementById('new-gender').value,
+        image:    imageValue || 'assets/product_sneakers.png',
+        description: document.getElementById('new-desc').value.trim() || '',
+        tags: document.getElementById('new-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+        inStock:  document.getElementById('new-instock').checked,
+        featured: document.getElementById('new-featured').checked,
+      });
+      saveProducts(products);
+      renderStats();
+      renderProductList();
+      addForm.classList.remove('open');
+
+      // Clear form
+      ['new-name','new-price','new-image','new-desc','new-tags'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      if (fileInput) fileInput.value = '';
+      if (preview) preview.src = 'assets/logo.jpeg';
+      document.getElementById('new-instock').checked  = true;
+      document.getElementById('new-featured').checked = false;
+
+      showToast(`✅ "${name}" added to catalog!`, 'success');
+    };
+
+    // Reset products
+    document.getElementById('reset-products-btn').onclick = () => {
+      if (!confirm('⚠️ Reset ALL products to defaults? You will lose any custom products.')) return;
+      localStorage.removeItem('tacey_products');
+      renderStats();
+      renderProductList();
+      showToast('↺ Products reset to defaults.', 'success');
+    };
+
+    // Change PIN toggle
+    document.getElementById('change-pin-toggle').onclick = () => {
+      const sec = document.getElementById('change-pin-section');
+      sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+      sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    document.getElementById('cancel-change-pin').onclick = () => {
+      document.getElementById('change-pin-section').style.display = 'none';
+    };
+  }
+
+  /* ── Change PIN Section ── */
+  let changePinFirst = '';
+
+  function initChangePinSection() {
+    changePinFirst = '';
+
+    buildKeypad('change-keypad-1', 'change-dots-1', 4, pin => {
+      changePinFirst = pin;
+      document.getElementById('change-step-1').style.display = 'none';
+      document.getElementById('change-step-2').style.display = 'block';
+    });
+
+    buildKeypad('change-keypad-2', 'change-dots-2', 4, pin => {
+      const errEl = document.getElementById('change-error');
+      if (pin !== changePinFirst) {
+        errEl.style.display = 'block';
+        errEl.textContent = "❌ PINs don't match. Try again.";
+        changePinFirst = '';
+        setTimeout(() => {
+          errEl.style.display = 'none';
+          document.getElementById('change-step-2').style.display = 'none';
+          document.getElementById('change-step-1').style.display = 'block';
+        }, 1400);
+        return;
+      }
+      storeHash(pin);
+      errEl.style.display = 'none';
+      document.getElementById('change-pin-section').style.display = 'none';
+      document.getElementById('change-step-2').style.display = 'none';
+      document.getElementById('change-step-1').style.display = 'block';
+      showToast('🔑 PIN changed successfully!', 'success');
+    });
+  }
+
+  /* ── Boot ── */
+  (function boot() {
+    // Already logged in via valid session?
+    if (isSessionValid() && getStoredHash()) {
+      showDashboard();
+      return;
+    }
+    // First time — no PIN set?
+    if (!getStoredHash()) {
+      initSetupScreen();
+      return;
+    }
+    // Normal login
+    initLoginScreen();
+  })();
+  </script>
+</body>
+</html>
