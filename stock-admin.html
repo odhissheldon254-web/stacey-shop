@@ -842,12 +842,32 @@
     { id:4, name:"Neon Stiletto High Heels",        category:"Footwear", gender:"Female", price:5200, image:"assets/product_heels.png",    description:"Hot pink glossy stiletto heels with a sleek metallic base.", tags:["heels","shoes","pink"], inStock:true, featured:true }
   ];
 
-  function loadProducts() {
+  async function loadProducts() {
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Failed to load');
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+    } catch (error) {
+      console.warn('Falling back to local products', error);
+    }
     return JSON.parse(localStorage.getItem('tacey_products') || 'null') || DEFAULT_PRODUCTS;
   }
 
-  function saveProducts(list) {
+  async function saveProducts(list) {
     localStorage.setItem('tacey_products', JSON.stringify(list));
+    try {
+      await fetch('/api/products', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Key': 'tacey-collections-admin'
+        },
+        body: JSON.stringify(list)
+      });
+    } catch (error) {
+      console.warn('Could not sync to server', error);
+    }
   }
 
   /* ── Image helpers ── */

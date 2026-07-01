@@ -6,7 +6,21 @@
 /* ================================================================
    PRODUCT CATALOG — Stacey can update prices & add items here
    ================================================================ */
-let PRODUCTS = JSON.parse(localStorage.getItem('tacey_products') || 'null') || [
+let PRODUCTS = [];
+
+async function loadProductsFromApi() {
+  try {
+    const res = await fetch('/api/products');
+    if (!res.ok) throw new Error('Failed to fetch');
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      PRODUCTS = data;
+      saveProducts();
+      return PRODUCTS;
+    }
+  } catch (error) {
+    console.warn('Using local fallback products', error);
+    PRODUCTS = JSON.parse(localStorage.getItem('tacey_products') || 'null') || [
   {
     id: 1,
     name: "Neon Pulse Streetwear Sneakers",
@@ -54,11 +68,13 @@ let PRODUCTS = JSON.parse(localStorage.getItem('tacey_products') || 'null') || [
     tags: ["heels","stiletto","shoes","pink","neon","glam","night out"],
     inStock: true,
     featured: true
+    }
+  ];
   }
-];
+  return PRODUCTS;
+}
 
-// Save products to localStorage so admin changes persist
-function saveProducts() {
+async function saveProducts() {
   localStorage.setItem('tacey_products', JSON.stringify(PRODUCTS));
 }
 
@@ -704,125 +720,6 @@ function handleUserMessage(text) {
 }
 
 /* ================================================================
-   ADMIN PANEL — Password-protected via URL hash #admin-tacey
-   ================================================================ */
-function initAdminPanel() {
-  if (window.location.hash !== '#admin-tacey') return;
-
-  const adminHTML = `
-  <div id="admin-panel" style="
-    position:fixed;inset:0;z-index:99999;
-    background:rgba(6,6,8,0.97);backdrop-filter:blur(20px);
-    padding:2rem;overflow-y:auto;font-family:var(--font-body);">
-
-    <div style="max-width:900px;margin:0 auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
-        <div>
-          <h1 style="font-family:var(--font-heading);font-size:1.8rem;margin-bottom:0.25rem;">
-            🔑 Admin Panel
-          </h1>
-          <p style="color:var(--color-text-muted);font-size:0.9rem;">Manage products, prices & stock for Tacey Collections</p>
-        </div>
-        <button onclick="document.getElementById('admin-panel').remove();history.pushState('',document.title,window.location.pathname);"
-          class="btn btn-ghost" style="flex-shrink:0;">✕ Close</button>
-      </div>
-
-      <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
-        <button onclick="adminAddProduct()" class="btn btn-primary">+ Add New Product</button>
-        <button onclick="adminResetProducts()" class="btn btn-ghost" style="border-color:var(--color-error);color:var(--color-error);">↺ Reset to Defaults</button>
-      </div>
-
-      <div id="admin-product-list" style="display:flex;flex-direction:column;gap:1rem;"></div>
-    </div>
-  </div>`;
-
-  document.body.insertAdjacentHTML('beforeend', adminHTML);
-  renderAdminList();
-}
-
-function renderAdminList() {
-  const list = document.getElementById('admin-product-list');
-  if (!list) return;
-  list.innerHTML = PRODUCTS.map((p, idx) => `
-    <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:1.25rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
-      <img src="${p.image}" alt="${p.name}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0;">
-      <div style="flex:1;min-width:200px;">
-        <input value="${p.name}" id="admin-name-${p.id}"
-          style="width:100%;background:var(--color-surface-elevated);border:1px solid var(--color-border);color:var(--color-text);padding:0.45rem 0.75rem;border-radius:6px;font-size:0.9rem;margin-bottom:0.5rem;">
-        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
-          <label style="font-size:0.82rem;color:var(--color-text-muted);">Price KES:
-            <input type="number" value="${p.price}" id="admin-price-${p.id}" min="0"
-              style="width:110px;background:var(--color-surface-elevated);border:1px solid var(--color-border);color:var(--color-accent);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.88rem;margin-left:0.4rem;">
-          </label>
-          <label style="font-size:0.82rem;color:var(--color-text-muted);display:flex;align-items:center;gap:0.4rem;">
-            <input type="checkbox" ${p.inStock ? 'checked' : ''} id="admin-stock-${p.id}"> In Stock
-          </label>
-          <label style="font-size:0.82rem;color:var(--color-text-muted);display:flex;align-items:center;gap:0.4rem;">
-            <input type="checkbox" ${p.featured ? 'checked' : ''} id="admin-feat-${p.id}"> Featured
-          </label>
-        </div>
-        <input value="${p.image}" id="admin-img-${p.id}" placeholder="Image path..."
-          style="width:100%;margin-top:0.5rem;background:var(--color-surface-elevated);border:1px solid var(--color-border);color:var(--color-text-muted);padding:0.4rem 0.75rem;border-radius:6px;font-size:0.8rem;">
-      </div>
-      <div style="display:flex;flex-direction:column;gap:0.5rem;">
-        <button onclick="adminSaveProduct(${p.id})" class="btn btn-primary" style="padding:0.5rem 1rem;font-size:0.85rem;">💾 Save</button>
-        <button onclick="adminDeleteProduct(${p.id})" class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:0.85rem;color:var(--color-error);border-color:var(--color-error);">🗑 Delete</button>
-      </div>
-    </div>`).join('');
-}
-
-window.adminSaveProduct = function(id) {
-  const p = PRODUCTS.find(x => x.id === id);
-  if (!p) return;
-  p.name     = document.getElementById(`admin-name-${id}`)?.value  || p.name;
-  p.price    = parseFloat(document.getElementById(`admin-price-${id}`)?.value) || p.price;
-  p.inStock  = document.getElementById(`admin-stock-${id}`)?.checked ?? p.inStock;
-  p.featured = document.getElementById(`admin-feat-${id}`)?.checked ?? p.featured;
-  p.image    = document.getElementById(`admin-img-${id}`)?.value || p.image;
-  saveProducts();
-  renderProducts();
-  alert(`✅ "${p.name}" saved successfully!`);
-};
-
-window.adminDeleteProduct = function(id) {
-  const p = PRODUCTS.find(x => x.id === id);
-  if (!p) return;
-  if (!confirm(`Delete "${p.name}"?`)) return;
-  PRODUCTS = PRODUCTS.filter(x => x.id !== id);
-  saveProducts();
-  renderProducts();
-  renderAdminList();
-};
-
-window.adminAddProduct = function() {
-  const newId = Math.max(...PRODUCTS.map(p => p.id), 0) + 1;
-  PRODUCTS.push({
-    id: newId,
-    name: "New Product",
-    category: "Footwear",
-    gender: "Unisex",
-    price: 2500,
-    image: "assets/product_sneakers.png",
-    description: "Add a description here.",
-    tags: [],
-    inStock: true,
-    featured: false
-  });
-  saveProducts();
-  renderProducts();
-  renderAdminList();
-  // Scroll to new product at bottom
-  const list = document.getElementById('admin-product-list');
-  list?.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
-};
-
-window.adminResetProducts = function() {
-  if (!confirm('Reset ALL products to defaults? This cannot be undone.')) return;
-  localStorage.removeItem('tacey_products');
-  location.reload();
-};
-
-/* ================================================================
    FILTER + SEARCH EVENT LISTENERS
    ================================================================ */
 function initFilters() {
@@ -935,7 +832,8 @@ function initModals() {
 /* ================================================================
    BOOT
    ================================================================ */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadProductsFromApi();
   renderProducts();
   renderCart();
   initFilters();
@@ -943,7 +841,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initNavbar();
   initModals();
   initAIChat();
-  initAdminPanel();
 
   // CSS badge pop animation (inject once)
   const style = document.createElement('style');

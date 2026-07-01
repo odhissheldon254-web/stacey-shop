@@ -1,0 +1,9 @@
+{
+  "name": "stacey-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stacey Collections storefront and admin API",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
