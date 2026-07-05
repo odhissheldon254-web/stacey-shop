@@ -51,8 +51,10 @@
       <span class="nav-brand-text">Tacey Collections</span>
     </div>
     <nav class="nav-links" aria-label="Primary Navigation">
-      <a href="#catalog" class="nav-link">Shop</a>
-      <a href="#about" class="nav-link">About Flyer</a>
+      <a href="/women" class="nav-link">Women</a>
+      <a href="/men" class="nav-link">Men</a>
+      <a href="/kids" class="nav-link">Kids</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
       <button class="nav-link" id="nav-quiz-trigger">Style Matcher</button>
     </nav>
     <div class="nav-actions">
@@ -79,10 +81,7 @@
         <h1 class="hero-title">Tacey Collections — Curated Fashion for Every Occasion</h1>
         <p class="hero-slogan">Style that speaks for you</p>
         <p class="hero-desc">
-          Discover premium footwear, designer bags, and elegant clothing at Tacey Collections in Kenya. Browse the latest curated pieces, chat with Stacey on WhatsApp, and enjoy seamless delivery.
-        </p>
-        <p style="margin-top:0.85rem; font-size:0.95rem; color:var(--color-text-muted);">
-          The public shop is separate from Stacey’s private stock-management page.
+          Discover premium footwear, designer bags, and elegant clothing at Tacey Collections in Kenya. Browse a refined edit of everyday essentials and occasion-ready pieces, then order with ease through WhatsApp.
         </p>
         <div class="hero-actions">
           <a href="#catalog" class="btn btn-primary">
@@ -95,6 +94,77 @@
           </button>
         </div>
       </div>
+      <div class="hero-brand">
+        <img src="assets/brand_flyer.jpeg" alt="Tacey Collections official brand — Style that speaks for you. Bags, footwear and clothes." class="hero-brand-img">
+      </div>
+    </section>
+
+    <!-- Boutique ticker strip -->
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-track">
+        <span>✦ Style that speaks for you</span><span>✦ New drops weekly</span><span>✦ M-Pesa payments</span><span>✦ Delivery across Kenya</span><span>✦ Free self-pickup</span><span>✦ Chat direct with Stacey</span>
+        <span>✦ Style that speaks for you</span><span>✦ New drops weekly</span><span>✦ M-Pesa payments</span><span>✦ Delivery across Kenya</span><span>✦ Free self-pickup</span><span>✦ Chat direct with Stacey</span>
+      </div>
+    </div>
+
+    <section class="highlights" aria-label="Highlights of Tacey Collections">
+      <article class="highlights-card">
+        <span class="highlight-icon">✦</span>
+        <div>
+          <h3>Curated with intention</h3>
+          <p>Each piece is chosen to feel effortless, elevated, and ready for real life.</p>
+        </div>
+      </article>
+      <article class="highlights-card">
+        <span class="highlight-icon">☛</span>
+        <div>
+          <h3>Instant WhatsApp ordering</h3>
+          <p>Browse, enquire, and order in one smooth flow with Stacey’s direct support.</p>
+        </div>
+      </article>
+      <article class="highlights-card">
+        <span class="highlight-icon">↺</span>
+        <div>
+          <h3>Easy pickup and delivery</h3>
+          <p>Flexible options make shopping feel calm, simple, and convenient for every customer.</p>
+        </div>
+      </article>
+    </section>
+
+    <!-- Shop by Department -->
+    <section class="dept-section" id="departments" aria-labelledby="dept-heading">
+      <div class="section-header">
+        <h2 class="section-title" id="dept-heading">Shop by Department</h2>
+        <p class="section-desc">Three curated worlds, each with its own shelves. Step into yours.</p>
+      </div>
+      <div class="dept-cards">
+        <a class="dept-card" href="/women">
+          <img src="assets/product_heels.png" alt="" class="dept-card-img" loading="lazy" aria-hidden="true">
+          <div class="dept-card-overlay">
+            <span class="dept-card-emoji" aria-hidden="true">👠</span>
+            <h3>Women</h3>
+            <p>Heels, gowns, bags &amp; everyday glam</p>
+            <span class="dept-card-cta">Browse the shelves →</span>
+          </div>
+        </a>
+        <a class="dept-card" href="/men">
+          <img src="assets/product_sneakers.png" alt="" class="dept-card-img" loading="lazy" aria-hidden="true">
+          <div class="dept-card-overlay">
+            <span class="dept-card-emoji" aria-hidden="true">👟</span>
+            <h3>Men</h3>
+            <p>Clean kicks, sharp fits &amp; streetwear</p>
+            <span class="dept-card-cta">Browse the shelves →</span>
+          </div>
+        </a>
+        <a class="dept-card dept-card-kids" href="/kids">
+          <div class="dept-card-overlay">
+            <span class="dept-card-emoji" aria-hidden="true">🧸</span>
+            <h3>Kids</h3>
+            <p>Playful, comfy picks for little trendsetters</p>
+            <span class="dept-card-cta">Browse the shelves →</span>
+          </div>
+        </a>
+      </div>
     </section>
 
     <!-- Catalog Section -->
@@ -102,19 +172,20 @@
       <div class="catalog-controls">
         <h2 class="sr-only" id="catalog-heading">Product Catalog</h2>
         <div class="catalog-filters">
-          <!-- Category Tabs -->
-          <div class="filter-tabs" role="tablist" aria-label="Filter by category">
+          <!-- Category Tabs (rebuilt dynamically from live catalog) -->
+          <div class="filter-tabs" role="tablist" aria-label="Filter by category" id="category-tablist">
             <button class="filter-tab active" role="tab" aria-selected="true" data-filter="category" data-value="all">All Items</button>
             <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Footwear">Footwear</button>
             <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Bags">Bags</button>
             <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Clothes">Clothes</button>
           </div>
-          
-          <!-- Gender Tabs -->
-          <div class="filter-tabs" role="tablist" aria-label="Filter by gender">
-            <button class="filter-tab active" role="tab" aria-selected="true" data-filter="gender" data-value="all">All Genders</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Female">Female</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Male">Male</button>
+
+          <!-- Department Tabs -->
+          <div class="filter-tabs" role="tablist" aria-label="Filter by department">
+            <button class="filter-tab active" role="tab" aria-selected="true" data-filter="gender" data-value="all">Everyone</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Female">Women</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Male">Men</button>
+            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Kids">Kids</button>
             <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Unisex">Unisex</button>
           </div>
 
@@ -132,12 +203,42 @@
       </div>
     </section>
 
-    <!-- Instagram / Lifestyle Showcase -->
+    <!-- How Ordering Works — trust section -->
+    <section class="how-it-works" id="how-it-works" aria-labelledby="how-heading">
+      <div class="section-header">
+        <h2 class="section-title" id="how-heading">How Ordering Works</h2>
+        <p class="section-desc">Simple, personal, and safe — every order is confirmed with Stacey before you pay a shilling.</p>
+      </div>
+      <div class="steps-grid">
+        <article class="step-card">
+          <span class="step-number">1</span>
+          <h3>Browse &amp; add to bag</h3>
+          <p>Pick your favourites from the catalog and add them to your order bag. No account needed.</p>
+        </article>
+        <article class="step-card">
+          <span class="step-number">2</span>
+          <h3>Confirm on WhatsApp</h3>
+          <p>Your order opens as a WhatsApp message to Stacey, who confirms availability, sizes, and your delivery details.</p>
+        </article>
+        <article class="step-card">
+          <span class="step-number">3</span>
+          <h3>Pay via M-Pesa</h3>
+          <p>Pay only after Stacey confirms your order — securely through M-Pesa, with the total agreed upfront.</p>
+        </article>
+        <article class="step-card">
+          <span class="step-number">4</span>
+          <h3>Delivery or pickup</h3>
+          <p>Doorstep delivery across Kenya (fees shown at checkout) or free self-pickup. Wrong item or size? Message Stacey within 48 hours to arrange an exchange.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Lookbook Showcase -->
     <section class="social-showcase" aria-labelledby="showcase-title">
       <div class="showcase-container">
         <div class="section-header">
-          <h2 class="section-title" id="showcase-title">Spotted in Tacey Collections</h2>
-          <p class="section-desc">Get style inspiration from our community on Instagram. Tag us using @tacey_collections to be featured!</p>
+          <h2 class="section-title" id="showcase-title">The Tacey Lookbook</h2>
+          <p class="section-desc">Style inspiration from our latest pieces. Follow @tacey_collections on Instagram for new arrivals and drops.</p>
         </div>
         <div class="instagram-grid">
           <!-- Card 1: Bag -->
@@ -184,7 +285,7 @@
           <h2 class="flyer-title" id="about-heading">Style That Speaks For You</h2>
           <p class="flyer-slogan">BAGS | FOOTWEARS | CLOTHES</p>
           <p class="flyer-desc">
-            Tacey Collections is a premier fashion boutique, serving both male and female fashion lovers with top-tier select items. Directly linked with Stacey, our cousin, we prioritize direct communication to guarantee pricing, customization, and swift delivery matching your needs.
+            Tacey Collections is a premier fashion boutique serving both male and female fashion lovers with top-tier, hand-selected pieces. Every order is handled personally by Stacey — you talk directly with the owner, so pricing is transparent, requests are heard, and delivery is arranged around you.
           </p>
           <div class="flyer-contacts">
             <div class="contact-item">
@@ -214,8 +315,7 @@
         </div>
         <div class="flyer-img-side">
           <div class="flyer-img-frame">
-            <!-- Embedding original image as requested by user -->
-            <img src="assets/logo.jpeg" alt="Tacey Collections Original Brand Banner Flyer. BAGS, FOOTWEARS, CLOTHES (Male & Female). Contact: +254702179011" class="flyer-original-img">
+            <img src="assets/brand_flyer.jpeg" alt="Tacey Collections Original Brand Flyer. Style that speaks for you. BAGS, FOOTWEARS, CLOTHES. Contact: +254702179011" class="flyer-original-img">
           </div>
         </div>
       </div>
@@ -225,7 +325,7 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-logo">Tacey <span>Collections</span></div>
-    <p class="footer-desc">Style that speaks for you. Handpicked footwears, clothing and bags supporting authentic customer care and immediate delivery.</p>
+    <p class="footer-desc">Style that speaks for you. Handpicked footwear, clothing and bags with personal customer care and swift delivery across Kenya.</p>
     <div class="footer-socials">
       <a href="https://instagram.com/tacey_collections" target="_blank" rel="noopener noreferrer" class="footer-social-link" aria-label="Follow Tacey Collections on Instagram">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -306,7 +406,7 @@
         </svg>
         <span>Confirm Order via WhatsApp</span>
       </button>
-      <p class="cart-disclaimer">Tacey AI will handle your order. Payment via M-Pesa coordinated by Stacey after confirmation.</p>
+      <p class="cart-disclaimer">Your order goes straight to Stacey on WhatsApp. You pay via M-Pesa only after she confirms — no upfront payment.</p>
     </div>
   </dialog>
 
@@ -380,8 +480,38 @@
         </div>
       </div>
 
-      <!-- Step 4: Results -->
-      <div class="quiz-step" data-step="4" id="quiz-results-container">
+      <!-- Step 4: Selfie session (optional) -->
+      <div class="quiz-step" data-step="4">
+        <p class="quiz-question">Fancy a private fashion show? 🎭</p>
+        <p class="quiz-cam-note">Take a quick selfie and we'll unveil your matched look on stage — starring you.
+          Your photo <strong>never leaves this device</strong>.</p>
+
+        <div class="quiz-cam-stage" id="quiz-cam-stage">
+          <video id="quiz-cam-video" playsinline autoplay muted hidden></video>
+          <img id="quiz-selfie-preview" alt="Your selfie preview" hidden>
+          <div class="quiz-cam-placeholder" id="quiz-cam-placeholder">📸</div>
+        </div>
+
+        <div class="quiz-cam-actions" id="quiz-cam-actions">
+          <button class="btn btn-primary" id="quiz-cam-start">📷 Open Camera</button>
+          <label class="btn btn-secondary" for="quiz-selfie-upload" style="cursor:pointer;">🖼 Upload a Photo</label>
+          <input type="file" id="quiz-selfie-upload" accept="image/*" capture="user" class="sr-only">
+          <button class="btn btn-ghost" id="quiz-cam-skip">Skip →</button>
+        </div>
+
+        <div class="quiz-cam-actions" id="quiz-snap-actions" hidden>
+          <button class="btn btn-primary" id="quiz-cam-snap">📸 Snap!</button>
+          <button class="btn btn-ghost" id="quiz-cam-cancel">Cancel</button>
+        </div>
+
+        <div class="quiz-cam-actions" id="quiz-selfie-actions" hidden>
+          <button class="btn btn-primary" id="quiz-show-btn">✨ Start My Fashion Show</button>
+          <button class="btn btn-ghost" id="quiz-retake-btn">↺ Retake</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Results / Fashion Show -->
+      <div class="quiz-step" data-step="5" id="quiz-results-container">
         <!-- Result items injected dynamically -->
       </div>
 
@@ -415,7 +545,7 @@
           </div>
           <div>
             <h3 class="ai-chat-title" id="ai-chat-heading">Tacey AI Stylist</h3>
-            <span class="ai-chat-subtitle">Always online · Powered by your catalog</span>
+            <span class="ai-chat-subtitle">Instant answers about our catalog &amp; delivery</span>
           </div>
         </div>
         <button class="ai-chat-close" id="ai-chat-close" aria-label="Close chat">

@@ -11,5 +11,14 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
-      - key: ADMIN_API_KEY
-        generateValue: true
+      # Stacey's admin login password. Set this in the Render dashboard
+      # and share it only with her.
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Optional but strongly recommended: free Supabase project so product
+      # edits survive restarts (Render's free disk is wiped on every deploy).
+      # See DEPLOY.md for the 5-minute setup.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false

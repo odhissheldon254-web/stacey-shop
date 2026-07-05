@@ -1,13 +1,42 @@
+/*
+ * Tacey Collections — storefront & stock-admin server.
+ *
+ * Zero npm dependencies. Storage backend:
+ *   - Supabase (free tier) when SUPABASE_URL + SUPABASE_SERVICE_KEY are set
+ *     (survives restarts/redeploys on free hosting), with the local JSON file
+ *     kept as a write-through backup.
+ *   - Local JSON file otherwise (fine for local development).
+ *
+ * Admin auth: password (ADMIN_PASSWORD env var) checked server-side via
+ * POST /api/admin/login, which returns a session token required for writes.
+ */
+
 const http = require('http');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || '0.0.0.0';
 const dataFile = process.env.DATA_FILE || path.join(__dirname, 'data', 'products.json');
-const adminFile = process.env.ADMIN_FILE || path.join(__dirname, 'data', 'admin.json');
 const dataDir = path.dirname(dataFile);
-const ADMIN_KEY = process.env.ADMIN_API_KEY || 'tacey-collections-admin';
+
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const useSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
+
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const MAX_BODY_BYTES = 20 * 1024 * 1024; // product images may be inlined as data URLs
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 10;
+
+const adminPassword = process.env.ADMIN_PASSWORD || '2265';
+if (!process.env.ADMIN_PASSWORD) {
+  console.warn('ADMIN_PASSWORD not set — using the default passcode. Set the env var in production.');
+}
+
+const sessions = new Map(); // token -> expiry timestamp
+const loginAttempts = new Map(); // ip -> { count, resetAt }
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -19,226 +48,324 @@ const MIME_TYPES = {
   '.jpeg': 'image/jpeg',
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon'
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8'
 };
 
-function ensureDataFile() {
+const DEFAULT_PRODUCTS = [
+  { id: 1, name: 'Neon Pulse Streetwear Sneakers', category: 'Footwear', gender: 'Unisex', price: 4500, qty: 8, image: 'assets/product_sneakers.png', description: 'Bold black streetwear sneakers with neon pink highlights.', tags: ['sneakers', 'shoes', 'streetwear'], inStock: true, featured: true },
+  { id: 2, name: 'Luxe Quilted Leather Handbag', category: 'Bags', gender: 'Female', price: 6800, qty: 5, image: 'assets/product_handbag.png', description: 'Timeless black quilted leather bag with gold chain strap.', tags: ['bag', 'handbag', 'luxury'], inStock: true, featured: true },
+  { id: 3, name: 'Velvet Drape Evening Gown', category: 'Clothes', gender: 'Female', price: 8200, qty: 2, image: 'assets/product_dress.png', description: 'Deep magenta velvet gown with elegant draping.', tags: ['dress', 'gown', 'formal'], inStock: true, featured: false },
+  { id: 4, name: 'Neon Stiletto High Heels', category: 'Footwear', gender: 'Female', price: 5200, qty: 6, image: 'assets/product_heels.png', description: 'Hot pink glossy stiletto heels with a sleek metallic base.', tags: ['heels', 'shoes', 'pink'], inStock: true, featured: true },
+  { id: 5, name: 'Little Steps Comfy Sneakers', category: 'Footwear', gender: 'Kids', price: 2400, qty: 10, image: 'assets/product_sneakers.png', description: 'Lightweight, easy-strap sneakers for little trendsetters — comfy for school runs and play dates.', tags: ['kids', 'sneakers', 'shoes'], inStock: true, featured: false },
+  { id: 6, name: 'Classic Panama Fedora', category: 'Hats', gender: 'Male', price: 1800, qty: 4, image: 'assets/logo.jpeg', description: 'Timeless woven fedora to top off any sharp look.', tags: ['hat', 'fedora', 'men'], inStock: true, featured: false }
+];
+
+/* ── Storage ─────────────────────────────────────────────── */
+
+function readFileProducts() {
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
   if (!fs.existsSync(dataFile)) {
-    const defaultProducts = [
-      { id: 1, name: 'Neon Pulse Streetwear Sneakers', category: 'Footwear', gender: 'Unisex', price: 4500, image: 'assets/product_sneakers.png', description: 'Bold black streetwear sneakers with neon pink highlights.', tags: ['sneakers', 'shoes', 'streetwear'], inStock: true, featured: true },
-      { id: 2, name: 'Luxe Quilted Leather Handbag', category: 'Bags', gender: 'Female', price: 6800, image: 'assets/product_handbag.png', description: 'Timeless black quilted leather bag with gold chain strap.', tags: ['bag', 'handbag', 'luxury'], inStock: true, featured: true },
-      { id: 3, name: 'Velvet Drape Evening Gown', category: 'Clothes', gender: 'Female', price: 8200, image: 'assets/product_dress.png', description: 'Deep magenta velvet gown with elegant draping.', tags: ['dress', 'gown', 'formal'], inStock: true, featured: false },
-      { id: 4, name: 'Neon Stiletto High Heels', category: 'Footwear', gender: 'Female', price: 5200, image: 'assets/product_heels.png', description: 'Hot pink glossy stiletto heels with a sleek metallic base.', tags: ['heels', 'shoes', 'pink'], inStock: true, featured: true }
-    ];
-    fs.writeFileSync(dataFile, JSON.stringify(defaultProducts, null, 2));
+    fs.writeFileSync(dataFile, JSON.stringify(DEFAULT_PRODUCTS, null, 2));
+  }
+  return JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+}
+
+function writeFileProducts(products) {
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(dataFile, JSON.stringify(products, null, 2));
+}
+
+async function supabaseRequest(pathname, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${pathname}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+  return res;
+}
+
+// Older records may predate the qty field — derive it from inStock.
+function normalizeProducts(list) {
+  return list.map(p => {
+    const qty = Number.isFinite(Number(p.qty)) ? Math.max(0, Math.floor(Number(p.qty))) : (p.inStock ? 1 : 0);
+    return { ...p, qty, inStock: qty > 0 };
+  });
+}
+
+async function loadProducts() {
+  if (useSupabase) {
+    try {
+      const res = await supabaseRequest('shop_data?key=eq.products&select=value');
+      const rows = await res.json();
+      if (rows.length && Array.isArray(rows[0].value)) return normalizeProducts(rows[0].value);
+      // First run against an empty table: seed it from the local file.
+      const seed = readFileProducts();
+      await saveProducts(seed);
+      return normalizeProducts(seed);
+    } catch (err) {
+      console.error('Supabase read failed, falling back to local file:', err.message);
+    }
+  }
+  return normalizeProducts(readFileProducts());
+}
+
+async function saveProducts(products) {
+  writeFileProducts(products);
+  if (useSupabase) {
+    await supabaseRequest('shop_data', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify([{ key: 'products', value: products }])
+    });
   }
 }
 
-function ensureAdminFile() {
-  const dir = path.dirname(adminFile);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(adminFile)) {
-    const admin = { pinHash: null, reset: null, email: process.env.ADMIN_EMAIL || null };
-    fs.writeFileSync(adminFile, JSON.stringify(admin, null, 2));
+/* ── Auth ────────────────────────────────────────────────── */
+
+function safeEqual(a, b) {
+  const ha = crypto.createHash('sha256').update(String(a)).digest();
+  const hb = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
+
+function clientIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  if (typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) return false;
+  return entry.count >= LOGIN_MAX_ATTEMPTS;
+}
+
+function recordLoginAttempt(ip, success) {
+  const now = Date.now();
+  if (success) { loginAttempts.delete(ip); return; }
+  const entry = loginAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+  } else {
+    entry.count += 1;
   }
 }
 
-function readProducts() { ensureDataFile(); return JSON.parse(fs.readFileSync(dataFile, 'utf8')); }
-function writeProducts(products) { ensureDataFile(); fs.writeFileSync(dataFile, JSON.stringify(products, null, 2)); }
-function readAdmin() { ensureAdminFile(); return JSON.parse(fs.readFileSync(adminFile, 'utf8')); }
-function writeAdmin(admin) { ensureAdminFile(); fs.writeFileSync(adminFile, JSON.stringify(admin, null, 2)); }
-
-function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Key, Authorization');
-  res.setHeader('Access-Control-Max-Age', '86400');
+function createSession() {
+  const token = crypto.randomBytes(32).toString('hex');
+  sessions.set(token, Date.now() + SESSION_TTL_MS);
+  return token;
 }
 
-function isAdminAuthorized(req) {
-  const headerKey = req.headers['x-admin-key'] || req.headers['authorization'];
-  const normalized = typeof headerKey === 'string' ? headerKey.replace(/^Bearer\s+/i, '').trim() : '';
-  return normalized === ADMIN_KEY;
+function sessionToken(req) {
+  const header = req.headers['authorization'];
+  if (typeof header !== 'string') return null;
+  return header.replace(/^Bearer\s+/i, '').trim() || null;
 }
 
-function serveStatic(req, res, filePath) {
-  const safePath = path.normalize(filePath).replace(/^\\u0000/, '');
-  const fullPath = path.join(__dirname, safePath);
-  if (!fullPath.startsWith(__dirname)) {
-    res.writeHead(403, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Forbidden' }));
+function isAuthorized(req) {
+  const token = sessionToken(req);
+  if (!token) return false;
+  const expiry = sessions.get(token);
+  if (!expiry) return false;
+  if (Date.now() > expiry) { sessions.delete(token); return false; }
+  return true;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, expiry] of sessions) if (now > expiry) sessions.delete(token);
+  for (const [ip, entry] of loginAttempts) if (now > entry.resetAt) loginAttempts.delete(ip);
+}, 10 * 60 * 1000).unref();
+
+/* ── Validation ──────────────────────────────────────────── */
+
+function sanitizeProducts(input) {
+  if (!Array.isArray(input)) throw new Error('Expected an array of products');
+  if (input.length > 500) throw new Error('Too many products');
+  return input.map((raw, i) => {
+    if (!raw || typeof raw !== 'object') throw new Error(`Product ${i + 1} is not an object`);
+    const name = String(raw.name || '').trim();
+    if (!name) throw new Error(`Product ${i + 1} is missing a name`);
+    const price = Number(raw.price);
+    if (!Number.isFinite(price) || price < 0) throw new Error(`"${name}" has an invalid price`);
+    // Quantity is the source of truth for availability; legacy payloads with
+    // only an inStock flag are mapped to a quantity of 1 or 0.
+    const rawQty = Number(raw.qty);
+    const qty = Number.isFinite(rawQty) ? Math.max(0, Math.floor(rawQty)) : (raw.inStock ? 1 : 0);
+    return {
+      id: Number.isFinite(Number(raw.id)) ? Number(raw.id) : i + 1,
+      name,
+      category: String(raw.category || 'Clothes'),
+      gender: String(raw.gender || 'Unisex'),
+      price,
+      qty,
+      image: String(raw.image || ''),
+      description: String(raw.description || ''),
+      tags: Array.isArray(raw.tags) ? raw.tags.map(t => String(t)).slice(0, 20) : [],
+      inStock: qty > 0,
+      featured: Boolean(raw.featured)
+    };
+  });
+}
+
+/* ── HTTP helpers ────────────────────────────────────────── */
+
+function sendJson(res, status, payload, extraHeaders = {}) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...extraHeaders });
+  res.end(JSON.stringify(payload));
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', chunk => {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        reject(new Error('Request body too large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('error', reject);
+  });
+}
+
+function serveStatic(res, requestPath) {
+  const resolved = path.resolve(__dirname, requestPath);
+  const rel = path.relative(__dirname, resolved);
+  const blocked =
+    rel.startsWith('..') ||
+    path.isAbsolute(rel) ||
+    rel.split(path.sep).some(part => part.startsWith('.')) ||
+    ['data', 'node_modules', 'tests'].includes(rel.split(path.sep)[0]);
+  if (blocked) {
+    sendJson(res, 404, { error: 'Not found' });
     return;
   }
 
-  fs.readFile(fullPath, (err, content) => {
+  fs.readFile(resolved, (err, content) => {
     if (err) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Not found' }));
+      sendJson(res, 404, { error: 'Not found' });
       return;
     }
-    const ext = path.extname(fullPath).toLowerCase();
-    const type = MIME_TYPES[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': type });
+    const ext = path.extname(resolved).toLowerCase();
+    res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
     res.end(content);
   });
 }
 
-function simpleHash(str) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(16);
-}
+/* ── Server ──────────────────────────────────────────────── */
 
-async function sendResetEmail(to, code) {
-  try {
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined,
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined
-    });
-    const from = process.env.FROM_EMAIL || process.env.SMTP_USER || 'no-reply@example.com';
-    const info = await transporter.sendMail({
-      from,
-      to,
-      subject: 'Tacey Collections — Reset Code',
-      text: `Your reset code is: ${code} (expires in 15 minutes)`
-    });
-    console.log('Email sent', info && info.messageId);
-    return true;
-  } catch (err) {
-    console.warn('nodemailer not configured or failed:', err && err.message);
-    return false;
-  }
-}
-
-const server = http.createServer((req, res) => {
-  setCorsHeaders(res);
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
   if (req.method === 'OPTIONS') {
-    res.writeHead(204);
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Max-Age': '86400'
+    });
     res.end();
     return;
   }
 
-  if (req.method === 'GET' && url.pathname === '/api/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, service: 'stacey-shop', timestamp: new Date().toISOString() }));
-    return;
-  }
-
-  if (req.method === 'GET' && url.pathname === '/api/products') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(readProducts()));
-    return;
-  }
-
-  if (req.method === 'PUT' && url.pathname === '/api/products') {
-    if (!isAdminAuthorized(req)) {
-      res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Unauthorized' }));
+  try {
+    if (req.method === 'GET' && url.pathname === '/api/health') {
+      sendJson(res, 200, { ok: true, service: 'stacey-shop', storage: useSupabase ? 'supabase' : 'file', timestamp: new Date().toISOString() });
       return;
     }
 
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-      try {
-        const products = JSON.parse(body);
-        if (!Array.isArray(products)) throw new Error('Expected array');
-        writeProducts(products);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, products }));
-      } catch (error) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
-      }
-    });
-    return;
-  }
-
-  if (req.method === 'POST' && url.pathname === '/api/admin/request-reset') {
-    if (!isAdminAuthorized(req)) {
-      res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Unauthorized' }));
+    if (req.method === 'GET' && url.pathname === '/api/products') {
+      const products = await loadProducts();
+      sendJson(res, 200, products, { 'Access-Control-Allow-Origin': '*' });
       return;
     }
 
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const email = (payload.email || '').trim();
-        const admin = readAdmin();
-        const configured = process.env.ADMIN_EMAIL || admin.email;
-        if (!configured || configured !== email) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Unknown admin email' })); return; }
-        const code = String(Math.floor(100000 + Math.random() * 900000));
-        const expires = Date.now() + (15 * 60 * 1000);
-        admin.reset = { code, expires };
-        admin.email = configured;
-        writeAdmin(admin);
-        const sent = await sendResetEmail(configured, code).catch(e => { console.error(e); return false; });
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, emailed: !!sent }));
-      } catch (error) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
+    if (req.method === 'POST' && url.pathname === '/api/admin/login') {
+      const ip = clientIp(req);
+      if (isRateLimited(ip)) {
+        sendJson(res, 429, { error: 'Too many attempts. Try again in 15 minutes.' });
+        return;
       }
-    });
-    return;
-  }
-
-  if (req.method === 'POST' && url.pathname === '/api/admin/confirm-reset') {
-    if (!isAdminAuthorized(req)) {
-      res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      let payload = {};
+      try { payload = JSON.parse((await readBody(req)) || '{}'); } catch { /* fall through to auth failure */ }
+      const ok = typeof payload.password === 'string' && safeEqual(payload.password, adminPassword);
+      recordLoginAttempt(ip, ok);
+      if (!ok) {
+        sendJson(res, 401, { error: 'Wrong password' });
+        return;
+      }
+      sendJson(res, 200, { ok: true, token: createSession(), expiresInHours: SESSION_TTL_MS / 3600000 });
       return;
     }
 
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const { email, code, newPin } = payload;
-        const admin = readAdmin();
-        const configured = process.env.ADMIN_EMAIL || admin.email;
-        if (!configured || configured !== (email || '').trim()) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Unknown admin email' })); return; }
-        const reset = admin.reset || {};
-        if (!reset.code || reset.code !== String(code) || Date.now() > (reset.expires || 0)) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Invalid or expired code' })); return; }
-        if (!newPin || String(newPin).length < 4) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'New PIN too short' })); return; }
-        const pinHash = simpleHash(String(newPin));
-        admin.pinHash = pinHash;
-        admin.reset = null;
-        writeAdmin(admin);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
-      } catch (error) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
+    if (req.method === 'GET' && url.pathname === '/api/admin/session') {
+      sendJson(res, isAuthorized(req) ? 200 : 401, { ok: isAuthorized(req) });
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/admin/logout') {
+      const token = sessionToken(req);
+      if (token) sessions.delete(token);
+      sendJson(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === 'PUT' && url.pathname === '/api/products') {
+      if (!isAuthorized(req)) {
+        sendJson(res, 401, { error: 'Unauthorized' });
+        return;
       }
-    });
-    return;
-  }
+      let products;
+      try {
+        products = sanitizeProducts(JSON.parse(await readBody(req)));
+      } catch (error) {
+        sendJson(res, 400, { error: error.message });
+        return;
+      }
+      await saveProducts(products);
+      sendJson(res, 200, { ok: true, count: products.length });
+      return;
+    }
 
-  const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
-  const filePath = pathname.replace(/^\//, '');
-  if (filePath) {
-    serveStatic(req, res, filePath);
-    return;
-  }
+    if (req.method === 'GET' && url.pathname === '/stock-admin.html') {
+      res.writeHead(302, { Location: '/admin.html' });
+      res.end();
+      return;
+    }
 
-  res.writeHead(404, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Not found' }));
+    // Department pages share one template; app.js reads the path.
+    if (req.method === 'GET' && ['/women', '/men', '/kids', '/shop'].includes(url.pathname)) {
+      serveStatic(res, 'shop.html');
+      return;
+    }
+
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
+      serveStatic(res, pathname.replace(/^\/+/, ''));
+      return;
+    }
+
+    sendJson(res, 404, { error: 'Not found' });
+  } catch (error) {
+    console.error('Request failed:', error);
+    sendJson(res, 500, { error: 'Internal server error' });
+  }
 });
 
 server.listen(port, host, () => {
-  console.log(`Products API & site server running on http://${host}:${port}`);
+  console.log(`Tacey Collections running on http://${host}:${port}`);
+  console.log(`Storage: ${useSupabase ? 'Supabase (persistent)' : `local file (${path.relative(__dirname, dataFile)})`}`);
 });

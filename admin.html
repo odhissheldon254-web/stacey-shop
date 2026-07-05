@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Tacey Collections — Admin</title>
+  <title>Tacey Collections — Stock Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -40,30 +40,18 @@
         radial-gradient(circle at 85% 75%, hsl(35 60% 65% / 0.04) 0%, transparent 45%);
     }
 
-    /* ── Shared ── */
     h1,h2,h3 { font-family: var(--font-h); font-weight: 700; letter-spacing: -0.02em; }
     button { cursor: pointer; border: none; font: inherit; }
     input, textarea, select { font: inherit; }
     a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+    html { scrollbar-color: var(--primary-g) var(--surface); scrollbar-width: thin; }
 
-    .sr-only {
-      position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;
-    }
-
-    /* ── Screens ── */
-    .screen {
-      display: none;
-      min-height: 100dvh;
-    }
+    .screen { display: none; min-height: 100dvh; }
     .screen.active { display: flex; }
 
-    /* ── Auth screens (setup + login) ── */
-    .auth-screen {
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      flex-direction: column;
-    }
+    /* ── Login ── */
+    .auth-screen { justify-content: center; align-items: center; padding: 2rem; flex-direction: column; }
 
     .auth-card {
       background: var(--surface);
@@ -86,8 +74,7 @@
     }
 
     .auth-logo {
-      width: 72px;
-      height: 72px;
+      width: 72px; height: 72px;
       border-radius: 50%;
       object-fit: cover;
       border: 3px solid var(--primary);
@@ -96,22 +83,10 @@
       margin: 0 auto 1.25rem;
     }
 
-    .auth-title {
-      text-align: center;
-      font-size: 1.5rem;
-      margin-bottom: 0.3rem;
-    }
+    .auth-title { text-align: center; font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .auth-sub { text-align: center; color: var(--muted); font-size: 0.875rem; margin-bottom: 2rem; }
 
-    .auth-sub {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.875rem;
-      margin-bottom: 2rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.1rem;
-    }
+    .form-group { margin-bottom: 1.1rem; }
 
     .form-label {
       display: block;
@@ -134,76 +109,22 @@
       transition: border var(--tr), box-shadow var(--tr);
     }
 
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 10px var(--primary-g);
-    }
+    .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-g); }
 
-    /* PIN dots display */
-    .pin-dots {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      margin: 1.25rem 0;
-    }
-
-    .pin-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid var(--border);
+    .password-wrap { position: relative; }
+    .password-wrap .form-input { padding-right: 3rem; }
+    .toggle-eye {
+      position: absolute;
+      right: 0.4rem; top: 50%;
+      transform: translateY(-50%);
       background: transparent;
-      transition: all var(--tr);
+      color: var(--muted);
+      padding: 0.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      line-height: 1;
     }
-
-    .pin-dot.filled {
-      background: var(--primary);
-      border-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary-g);
-    }
-
-    /* PIN Keypad */
-    .pin-keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.65rem;
-      margin-top: 0.5rem;
-    }
-
-    .pin-key {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 1rem 0;
-      font-family: var(--font-h);
-      font-size: 1.2rem;
-      font-weight: 600;
-      transition: all var(--tr);
-      text-align: center;
-      min-height: 56px;
-      display: grid;
-      place-items: center;
-    }
-
-    .pin-key:hover { background: var(--surface); border-color: var(--primary-g); }
-    .pin-key:active { transform: scale(0.95); }
-
-    .pin-key.zero {
-      grid-column: 2;
-    }
-
-    .pin-key.backspace {
-      background: hsl(355 85% 55% / 0.1);
-      border-color: hsl(355 85% 55% / 0.3);
-      color: var(--error);
-      grid-column: 3;
-    }
-
-    .pin-key.backspace:hover {
-      background: hsl(355 85% 55% / 0.2);
-    }
+    .toggle-eye:hover { color: var(--text); }
 
     .btn-auth {
       width: 100%;
@@ -212,10 +133,8 @@
       font-family: var(--font-h);
       font-weight: 700;
       font-size: 1rem;
-      margin-top: 1rem;
+      margin-top: 0.5rem;
       transition: all var(--tr);
-      border: none;
-      cursor: pointer;
     }
 
     .btn-primary {
@@ -226,30 +145,7 @@
 
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px var(--primary-g); }
     .btn-primary:active { transform: translateY(0); }
-
-    .btn-ghost {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
-
-    .btn-danger {
-      background: hsl(355 85% 55% / 0.12);
-      border: 1px solid hsl(355 85% 55% / 0.4);
-      color: var(--error);
-    }
-
-    .btn-danger:hover { background: hsl(355 85% 55% / 0.2); }
-
-    .btn-success {
-      background: hsl(145 80% 45% / 0.15);
-      border: 1px solid hsl(145 80% 45% / 0.4);
-      color: var(--success);
-    }
-
-    .btn-success:hover { background: hsl(145 80% 45% / 0.25); }
+    .btn-primary[disabled] { opacity: 0.6; cursor: wait; transform: none; }
 
     .auth-error {
       background: hsl(355 85% 55% / 0.12);
@@ -258,7 +154,7 @@
       padding: 0.65rem 1rem;
       font-size: 0.875rem;
       color: var(--error);
-      margin-top: 0.75rem;
+      margin-top: 0.9rem;
       text-align: center;
       animation: shake 0.4s ease;
     }
@@ -269,11 +165,16 @@
       75%{transform:translateX(6px)}
     }
 
-    /* ── Dashboard screen ── */
-    #screen-dashboard {
-      flex-direction: column;
-      align-items: stretch;
+    .auth-hint {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
     }
+
+    /* ── Dashboard ── */
+    #screen-dashboard { flex-direction: column; align-items: stretch; }
 
     .dash-navbar {
       position: sticky;
@@ -290,15 +191,10 @@
       flex-wrap: wrap;
     }
 
-    .dash-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
+    .dash-brand { display: flex; align-items: center; gap: 0.75rem; }
 
     .dash-logo {
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid var(--primary);
@@ -315,12 +211,7 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .dash-nav-actions {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+    .dash-nav-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 
     .dash-btn {
       padding: 0.5rem 1.1rem;
@@ -329,35 +220,18 @@
       font-weight: 600;
       transition: all var(--tr);
       border: 1px solid transparent;
-      cursor: pointer;
       font-family: var(--font-b);
     }
 
-    .dash-btn-outline {
-      background: transparent;
-      border-color: var(--border);
-      color: var(--muted);
-    }
-
+    .dash-btn-outline { background: transparent; border-color: var(--border); color: var(--muted); }
     .dash-btn-outline:hover { border-color: var(--muted); color: var(--text); }
 
-    .dash-btn-primary {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 0 10px var(--primary-g);
-    }
-
+    .dash-btn-primary { background: var(--primary); color: #fff; box-shadow: 0 0 10px var(--primary-g); }
     .dash-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 18px var(--primary-g); }
 
-    .dash-btn-danger {
-      background: hsl(355 85% 55% / 0.1);
-      border-color: hsl(355 85% 55% / 0.35);
-      color: var(--error);
-    }
-
+    .dash-btn-danger { background: hsl(355 85% 55% / 0.1); border-color: hsl(355 85% 55% / 0.35); color: var(--error); }
     .dash-btn-danger:hover { background: hsl(355 85% 55% / 0.2); }
 
-    /* ── Dashboard content ── */
     .dash-content {
       flex: 1;
       max-width: 1000px;
@@ -389,11 +263,7 @@
       line-height: 1;
     }
 
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-top: 0.3rem;
-    }
+    .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
 
     .dash-section-title {
       font-family: var(--font-h);
@@ -405,13 +275,8 @@
       gap: 0.5rem;
     }
 
-    /* ── Product List ── */
-    .product-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-    }
+    /* ── Product list ── */
+    .product-list { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2.5rem; }
 
     .product-row {
       background: var(--surface);
@@ -422,31 +287,22 @@
       grid-template-columns: 70px 1fr auto;
       gap: 1.1rem;
       align-items: start;
-      transition: border-color var(--tr);
+      transition: border-color var(--tr), opacity var(--tr);
     }
 
     .product-row:hover { border-color: var(--primary-g); }
+    .product-row.is-out { opacity: 0.65; }
 
     .product-row-img {
-      width: 70px;
-      height: 70px;
+      width: 70px; height: 70px;
       object-fit: cover;
       border-radius: 10px;
       border: 1px solid var(--border);
     }
 
-    .product-row-fields {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
+    .product-row-fields { display: flex; flex-direction: column; gap: 0.6rem; }
 
-    .field-row {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+    .field-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 
     .field-input {
       background: var(--surface2);
@@ -459,22 +315,94 @@
       width: 100%;
     }
 
-    .field-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary-g);
+    .field-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 8px var(--primary-g); }
+    .field-input.price-input { width: 120px; color: var(--accent); font-weight: 700; }
+    .field-input.img-input { font-size: 0.78rem; color: var(--muted); }
+
+    /* Stock switch — the star of the show */
+    .stock-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem 0.35rem 0.5rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all var(--tr);
     }
 
-    .field-input.price-input {
-      width: 120px;
+    .stock-switch .knob {
+      width: 34px; height: 20px;
+      border-radius: 999px;
+      background: hsl(355 85% 55% / 0.35);
+      position: relative;
+      transition: background var(--tr);
+      flex-shrink: 0;
+    }
+
+    .stock-switch .knob::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform var(--tr);
+    }
+
+    .stock-switch input { position: absolute; opacity: 0; pointer-events: none; }
+    .stock-switch.on { border-color: hsl(145 80% 45% / 0.5); color: var(--success); }
+    .stock-switch.on .knob { background: var(--success); }
+    .stock-switch.on .knob::after { transform: translateX(14px); }
+    .stock-switch:not(.on) { color: var(--error); }
+
+    /* Quantity stepper */
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem 0.25rem 0.25rem;
+    }
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      transition: all var(--tr);
+    }
+
+    .qty-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .qty-input {
+      width: 52px;
+      background: transparent;
+      border: none;
       color: var(--accent);
       font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+      -moz-appearance: textfield;
     }
 
-    .field-input.img-input {
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .qty-input:focus { outline: none; }
+
+    .qty-label { font-size: 0.75rem; color: var(--muted); }
 
     .checkbox-label {
       display: flex;
@@ -487,12 +415,7 @@
       user-select: none;
     }
 
-    .checkbox-label input[type="checkbox"] {
-      accent-color: var(--primary);
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-    }
+    .checkbox-label input[type="checkbox"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; }
 
     .select-input {
       background: var(--surface2);
@@ -504,12 +427,7 @@
       cursor: pointer;
     }
 
-    .product-row-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      min-width: 90px;
-    }
+    .product-row-actions { display: flex; flex-direction: column; gap: 0.5rem; min-width: 90px; }
 
     .row-btn {
       padding: 0.5rem 0.75rem;
@@ -517,29 +435,25 @@
       font-size: 0.8rem;
       font-weight: 600;
       border: 1px solid transparent;
-      cursor: pointer;
       font-family: var(--font-b);
       transition: all var(--tr);
       text-align: center;
     }
 
-    .row-btn-save {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 0 8px var(--primary-g);
-    }
-
+    .row-btn-save { background: var(--primary); color: #fff; box-shadow: 0 0 8px var(--primary-g); }
     .row-btn-save:hover { transform: translateY(-1px); }
-
-    .row-btn-del {
-      background: hsl(355 85% 55% / 0.1);
-      border-color: hsl(355 85% 55% / 0.3);
-      color: var(--error);
-    }
-
+    .row-btn-del { background: hsl(355 85% 55% / 0.1); border-color: hsl(355 85% 55% / 0.3); color: var(--error); }
     .row-btn-del:hover { background: hsl(355 85% 55% / 0.2); }
 
-    /* ── Add product form ── */
+    details.row-more summary {
+      font-size: 0.78rem;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    details.row-more[open] summary { margin-bottom: 0.6rem; }
+
+    /* ── Add product ── */
     .add-product-card {
       background: var(--surface);
       border: 2px dashed var(--border);
@@ -551,29 +465,17 @@
 
     .add-product-card.open { display: block; }
 
-    .add-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.85rem;
-      margin-top: 1rem;
-    }
+    .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-top: 1rem; }
 
     @media (max-width: 580px) {
       .add-grid { grid-template-columns: 1fr; }
       .product-row { grid-template-columns: 60px 1fr; }
       .product-row-actions { flex-direction: row; grid-column: 1/-1; }
+      .dash-content { padding: 1.25rem; }
+      .dash-navbar { padding: 0.85rem 1.25rem; }
     }
 
-    /* ── Passcode Change section ── */
-    .passcode-change-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.5rem;
-      margin-bottom: 2.5rem;
-    }
-
-    /* ── Toast notification ── */
+    /* ── Toast ── */
     #toast {
       position: fixed;
       bottom: 1.5rem;
@@ -594,133 +496,58 @@
     #toast.show { transform: translateX(-50%) translateY(0); }
     #toast.success { color: var(--success); border-color: hsl(145 80% 45% / 0.4); }
     #toast.error   { color: var(--error);   border-color: hsl(355 85% 55% / 0.4); }
-
-    /* Focus ring */
-    :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
-
-    /* Scrollbar */
-    html { scrollbar-color: var(--primary-g) var(--surface); scrollbar-width: thin; }
   </style>
 </head>
 <body>
 
-  <!-- ======================================================
-       SCREEN 1: FIRST-TIME SETUP (create passcode)
-       ====================================================== -->
-  <div class="screen auth-screen" id="screen-setup">
+  <!-- ── Login ── -->
+  <div class="screen auth-screen active" id="screen-login">
     <div class="auth-card">
       <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
-      <h1 class="auth-title">Welcome, Stacey! 👋</h1>
-      <p class="auth-sub">This is your private admin panel. Let's create your secret passcode to protect it.</p>
+      <h1 class="auth-title">Welcome back, Stacey 💐</h1>
+      <p class="auth-sub">Your private stock room. Enter your passcode to manage products, shelves and availability.</p>
 
-      <div id="setup-step-1">
-        <p style="font-size:0.85rem;color:var(--muted);text-align:center;margin-bottom:0.5rem;">Choose a 4-digit PIN</p>
-        <div class="pin-dots" id="setup-dots-1"></div>
-        <div class="pin-keypad" id="setup-keypad-1"></div>
-      </div>
-
-      <div id="setup-step-2" style="display:none;">
-        <p style="font-size:0.85rem;color:var(--muted);text-align:center;margin-bottom:0.5rem;">Confirm your PIN</p>
-        <div class="pin-dots" id="setup-dots-2"></div>
-        <div class="pin-keypad" id="setup-keypad-2"></div>
-      </div>
-
-      <div id="setup-error" style="display:none;" class="auth-error"></div>
-    </div>
-  </div>
-
-  <!-- ======================================================
-       SCREEN 2: LOGIN
-       ====================================================== -->
-  <div class="screen auth-screen" id="screen-login">
-    <div class="auth-card">
-      <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
-      <h1 class="auth-title">Admin Access 🔐</h1>
-      <p class="auth-sub">Enter your PIN to manage Tacey Collections</p>
-
-      <div class="pin-dots" id="login-dots"></div>
-      <div class="pin-keypad" id="login-keypad"></div>
+      <form id="login-form" autocomplete="off">
+        <div class="form-group">
+          <label class="form-label" for="password-input">Passcode</label>
+          <div class="password-wrap">
+            <input type="password" id="password-input" class="form-input" placeholder="Enter your passcode…" autocomplete="current-password" inputmode="numeric" required>
+            <button type="button" class="toggle-eye" id="toggle-eye" aria-label="Show password">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-auth btn-primary" id="login-btn">Unlock Dashboard</button>
+      </form>
 
       <div id="login-error" style="display:none;" class="auth-error"></div>
 
-      <p style="text-align:center;margin-top:1.25rem;font-size:0.78rem;color:var(--muted);">
-        Forgot your PIN? <a id="forgot-link" href="#" style="color:var(--primary);text-decoration:underline;">Reset it</a>
+      <p class="auth-hint">
+        Forgot the password? It is set by whoever manages the website hosting —
+        ask them to update <strong>ADMIN_PASSWORD</strong> and share the new one with you.
       </p>
     </div>
   </div>
 
-  <!-- ======================================================
-       SCREEN 3: FORGOT / RESET PASSCODE
-       ====================================================== -->
-  <div class="screen auth-screen" id="screen-forgot">
-    <div class="auth-card">
-      <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
-      <h1 class="auth-title">Reset PIN 🔑</h1>
-      <p class="auth-sub">Enter the master reset key to clear your PIN and start over.</p>
-
-      <div class="form-group">
-        <label class="form-label" for="reset-key-input">Master Reset Key</label>
-        <input type="password" id="reset-key-input" class="form-input" placeholder="Enter reset key…" autocomplete="off">
-        <p style="font-size:0.76rem;color:var(--muted);margin-top:0.4rem;">
-          The reset key is: <strong style="color:var(--accent);">tacey2024reset</strong><br>
-          (Keep this private — share only with your trusted family member)
-        </p>
-      </div>
-
-      <button class="btn-auth btn-primary" id="reset-submit-btn">Verify & Reset PIN</button>
-      <button class="btn-auth btn-ghost" id="back-to-login-btn" style="margin-top:0.5rem;">← Back to Login</button>
-      <div id="reset-error" style="display:none;" class="auth-error"></div>
-    </div>
-  </div>
-
-  <!-- ======================================================
-       SCREEN 4: DASHBOARD
-       ====================================================== -->
+  <!-- ── Dashboard ── -->
   <div class="screen" id="screen-dashboard">
 
-    <!-- Nav Bar -->
     <nav class="dash-navbar">
       <div class="dash-brand">
         <img src="assets/logo.jpeg" alt="Tacey Collections" class="dash-logo">
-        <span class="dash-brand-text">Tacey Admin</span>
+        <span class="dash-brand-text">Tacey Stock Room</span>
       </div>
       <div class="dash-nav-actions">
-        <a href="index.html" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-outline">
-          🌐 View Live Site
-        </a>
-        <button id="change-pin-toggle" class="dash-btn dash-btn-outline">🔑 Change PIN</button>
+        <a href="index.html" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-outline">🌐 View Live Site</a>
+        <button id="refresh-btn" class="dash-btn dash-btn-outline">↺ Refresh</button>
         <button id="logout-btn" class="dash-btn dash-btn-danger">🚪 Logout</button>
       </div>
     </nav>
 
-    <!-- Dashboard Content -->
     <div class="dash-content">
 
-      <!-- Stats -->
       <div class="dash-stats" id="dash-stats"></div>
 
-      <!-- Change PIN Section (hidden by default) -->
-      <div class="passcode-change-card" id="change-pin-section" style="display:none;">
-        <h2 class="dash-section-title">🔑 Change Your PIN</h2>
-        <p style="color:var(--muted);font-size:0.875rem;margin-bottom:1rem;">Choose a new 4-digit PIN for your admin panel.</p>
-        <div id="change-step-1">
-          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem;">New PIN</p>
-          <div class="pin-dots" id="change-dots-1"></div>
-          <div class="pin-keypad" id="change-keypad-1"></div>
-        </div>
-        <div id="change-step-2" style="display:none;margin-top:1rem;">
-          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem;">Confirm New PIN</p>
-          <div class="pin-dots" id="change-dots-2"></div>
-          <div class="pin-keypad" id="change-keypad-2"></div>
-        </div>
-        <div id="change-error" style="display:none;" class="auth-error"></div>
-        <button class="dash-btn dash-btn-outline" id="cancel-change-pin" style="margin-top:1rem;width:100%;">Cancel</button>
-      </div>
-
-      <!-- Add Product -->
       <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;">
         <button id="add-product-btn" class="dash-btn dash-btn-primary">+ Add New Product</button>
-        <button id="reset-products-btn" class="dash-btn dash-btn-danger">↺ Reset to Defaults</button>
       </div>
 
       <!-- Add Product Form -->
@@ -737,19 +564,23 @@
             <input id="new-price" type="number" class="field-input" placeholder="3500" min="0">
           </div>
           <div class="form-group">
-            <label class="form-label" for="new-category">Category</label>
-            <select id="new-category" class="field-input select-input">
-              <option>Footwear</option>
-              <option>Bags</option>
-              <option>Clothes</option>
-            </select>
+            <label class="form-label" for="new-qty">Pieces Available</label>
+            <input id="new-qty" type="number" class="field-input" placeholder="e.g. 5" min="0" value="1">
           </div>
           <div class="form-group">
-            <label class="form-label" for="new-gender">Gender</label>
+            <label class="form-label" for="new-category">Category (shelf)</label>
+            <input id="new-category" class="field-input" list="category-options" placeholder="e.g. Footwear, Bags, Hats…">
+            <p style="font-size:0.72rem;color:var(--muted);margin-top:0.35rem;">
+              Type a new category (like “Hats”) and a new shelf appears on the shop automatically.
+            </p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-gender">Department</label>
             <select id="new-gender" class="field-input select-input">
               <option>Female</option>
               <option>Male</option>
               <option>Unisex</option>
+              <option>Kids</option>
             </select>
           </div>
           <div class="form-group">
@@ -769,12 +600,8 @@
             <input id="new-tags" class="field-input" placeholder="sneakers, white, casual, women">
           </div>
           <div style="display:flex;gap:1rem;align-items:center;grid-column:1/-1;">
-            <label class="checkbox-label">
-              <input type="checkbox" id="new-instock" checked> In Stock
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" id="new-featured"> Featured
-            </label>
+            <label class="checkbox-label"><input type="checkbox" id="new-instock" checked> In Stock</label>
+            <label class="checkbox-label"><input type="checkbox" id="new-featured"> Featured</label>
           </div>
         </div>
         <div style="display:flex;gap:0.75rem;margin-top:1rem;">
@@ -783,72 +610,343 @@
         </div>
       </div>
 
-      <!-- Product List -->
-      <h2 class="dash-section-title">📦 Current Products</h2>
+      <!-- Recent updates — Stacey's activity record -->
+      <div class="stat-card" id="activity-card" style="text-align:left;margin-bottom:2.5rem;display:none;">
+        <h2 class="dash-section-title" style="font-size:1.05rem;margin-bottom:0.6rem;">🕘 Recent Updates</h2>
+        <ul id="activity-list" style="list-style:none;display:flex;flex-direction:column;gap:0.4rem;font-size:0.82rem;color:var(--muted);"></ul>
+      </div>
+
+      <datalist id="category-options"></datalist>
+
+      <h2 class="dash-section-title">📦 Your Products</h2>
+      <p style="font-size:0.85rem;color:var(--muted);margin:-0.5rem 0 1rem;">
+        Tap the switch to mark items in or out of stock — it saves instantly and updates the shop for customers right away.
+      </p>
       <div class="product-list" id="dash-product-list"></div>
 
-    </div><!-- /dash-content -->
-  </div><!-- /screen-dashboard -->
+    </div>
+  </div>
 
   <!-- Toast -->
   <div id="toast" role="alert" aria-live="polite"></div>
 
   <script>
   /* ============================================================
-     ADMIN PANEL — JavaScript
+     Tacey Stock Room — all changes are saved on the server.
+     Auth: password → session token from /api/admin/login.
      ============================================================ */
 
-  const MASTER_RESET_KEY = 'tacey2024reset';
-  const PIN_KEY          = 'tacey_admin_pin_hash';
-  const SESSION_KEY      = 'tacey_admin_session';
-  const SESSION_TTL      = 4 * 60 * 60 * 1000; // 4 hours
+  const TOKEN_KEY = 'tacey_admin_token';
+  let products = [];
 
-  /* ── Simple hash (not cryptographic, sufficient for local app) ── */
-  function simpleHash(str) {
-    let h = 0x811c9dc5;
-    for (let i = 0; i < str.length; i++) {
-      h ^= str.charCodeAt(i);
-      h = (h * 0x01000193) >>> 0;
+  const $ = id => document.getElementById(id);
+
+  function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
+
+  /* ── Toast ── */
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = `show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = ''; }, 2800);
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+
+  /* ── API ── */
+  async function apiLogin(password) {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    return data.token;
+  }
+
+  async function apiLoadProducts() {
+    const res = await fetch('/api/products');
+    if (!res.ok) throw new Error('Could not load products');
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('Bad product data');
+    return data;
+  }
+
+  async function apiSaveProducts(list) {
+    const res = await fetch('/api/products', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify(list)
+    });
+    if (res.status === 401) {
+      sessionStorage.removeItem(TOKEN_KEY);
+      showScreen('screen-login');
+      throw new Error('Session expired — please log in again');
     }
-    return h.toString(16);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Save failed');
   }
 
-  /* ── Session helpers ── */
-  function createSession() {
-    sessionStorage.setItem(SESSION_KEY, Date.now().toString());
+  async function persist(successMsg) {
+    try {
+      await apiSaveProducts(products);
+      renderStats();
+      renderCategoryOptions();
+      if (successMsg) {
+        showToast(successMsg, 'success');
+        logActivity(successMsg);
+      }
+      return true;
+    } catch (err) {
+      showToast(`⚠️ ${err.message}`, 'error');
+      return false;
+    }
   }
 
-  function isSessionValid() {
-    const t = sessionStorage.getItem(SESSION_KEY);
-    if (!t) return false;
-    return (Date.now() - parseInt(t, 10)) < SESSION_TTL;
+  /* ── Recent updates record ── */
+  const LOG_KEY = 'tacey_admin_log';
+
+  function logActivity(msg) {
+    const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+    log.unshift({ msg: msg.replace(/^[^\w"]+\s*/, ''), at: Date.now() });
+    localStorage.setItem(LOG_KEY, JSON.stringify(log.slice(0, 20)));
+    renderActivity();
   }
 
-  function destroySession() {
-    sessionStorage.removeItem(SESSION_KEY);
+  function renderActivity() {
+    const card = $('activity-card');
+    const list = $('activity-list');
+    if (!card || !list) return;
+    const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+    if (!log.length) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    list.innerHTML = log.slice(0, 6).map(entry => {
+      const when = new Date(entry.at).toLocaleString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      return `<li>• ${entry.msg} <span style="opacity:0.6;">— ${when}</span></li>`;
+    }).join('');
   }
 
-  /* ── PIN storage ── */
-  function getStoredHash() { return localStorage.getItem(PIN_KEY); }
-  function storeHash(pin)  { localStorage.setItem(PIN_KEY, simpleHash(pin)); }
-  function checkPin(pin)   { return simpleHash(pin) === getStoredHash(); }
-  function clearPin()      { localStorage.removeItem(PIN_KEY); }
-
-  /* ── Products ── */
-  const DEFAULT_PRODUCTS = [
-    { id:1, name:"Neon Pulse Streetwear Sneakers", category:"Footwear", gender:"Unisex", price:4500, image:"assets/product_sneakers.png", description:"Bold black streetwear sneakers with neon pink highlights.", tags:["sneakers","shoes","streetwear"], inStock:true, featured:true },
-    { id:2, name:"Luxe Quilted Leather Handbag",   category:"Bags",     gender:"Female", price:6800, image:"assets/product_handbag.png",  description:"Timeless black quilted leather bag with gold chain strap.", tags:["bag","handbag","luxury"], inStock:true, featured:true },
-    { id:3, name:"Velvet Drape Evening Gown",       category:"Clothes",  gender:"Female", price:8200, image:"assets/product_dress.png",    description:"Deep magenta velvet gown with elegant draping.",    tags:["dress","gown","formal"], inStock:true, featured:false },
-    { id:4, name:"Neon Stiletto High Heels",        category:"Footwear", gender:"Female", price:5200, image:"assets/product_heels.png",    description:"Hot pink glossy stiletto heels with a sleek metallic base.", tags:["heels","shoes","pink"], inStock:true, featured:true }
-  ];
-
-  function loadProducts() {
-    return JSON.parse(localStorage.getItem('tacey_products') || 'null') || DEFAULT_PRODUCTS;
+  /* ── Category suggestions (existing shelves + common ones) ── */
+  function renderCategoryOptions() {
+    const dl = $('category-options');
+    if (!dl) return;
+    const cats = new Set(['Footwear', 'Bags', 'Clothes', 'Hats', 'Accessories', 'Jewellery']);
+    products.forEach(p => p.category && cats.add(p.category));
+    dl.innerHTML = [...cats].map(c => `<option value="${escHtml(c)}"></option>`).join('');
   }
 
-  function saveProducts(list) {
-    localStorage.setItem('tacey_products', JSON.stringify(list));
+  /* ── Login flow ── */
+  $('toggle-eye').addEventListener('click', () => {
+    const input = $('password-input');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+
+  $('login-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('login-btn');
+    const errEl = $('login-error');
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    errEl.style.display = 'none';
+    try {
+      const token = await apiLogin($('password-input').value);
+      sessionStorage.setItem(TOKEN_KEY, token);
+      $('password-input').value = '';
+      showToast('Welcome back, Stacey! 💅', 'success');
+      await enterDashboard();
+    } catch (err) {
+      errEl.style.display = 'block';
+      errEl.textContent = `❌ ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Unlock Dashboard';
+    }
+  });
+
+  /* ── Dashboard ── */
+  async function enterDashboard() {
+    products = await apiLoadProducts();
+    showScreen('screen-dashboard');
+    renderStats();
+    renderCategoryOptions();
+    renderActivity();
+    renderProductList();
   }
+
+  function renderStats() {
+    const inStock  = products.filter(p => p.inStock).length;
+    const outOfStk = products.length - inStock;
+    const featured = products.filter(p => p.featured).length;
+    const pieces   = products.reduce((s, p) => s + (Number(p.qty) || 0), 0);
+
+    $('dash-stats').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-number">${products.length}</div>
+        <div class="stat-label">Total Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--text);">${pieces}</div>
+        <div class="stat-label">Pieces in Store</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--success);">${inStock}</div>
+        <div class="stat-label">In Stock</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--error);">${outOfStk}</div>
+        <div class="stat-label">Out of Stock</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent);">${featured}</div>
+        <div class="stat-label">Featured</div>
+      </div>`;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderProductList() {
+    const list = $('dash-product-list');
+
+    if (!products.length) {
+      list.innerHTML = `<p style="color:var(--muted);text-align:center;padding:2rem;">No products yet. Add one above!</p>`;
+      return;
+    }
+
+    list.innerHTML = products.map(p => `
+      <div class="product-row ${p.inStock ? '' : 'is-out'}" data-pid="${p.id}">
+        <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" class="product-row-img" onerror="this.src='assets/logo.jpeg'">
+        <div class="product-row-fields">
+          <input class="field-input" value="${escHtml(p.name)}" data-field="name" placeholder="Product name">
+          <div class="field-row">
+            <input class="field-input price-input" type="number" value="${p.price}" data-field="price" min="0" placeholder="Price">
+            <input class="field-input" list="category-options" value="${escHtml(p.category)}" data-field="category" placeholder="Category / shelf" style="width:150px;">
+            <select class="field-input select-input" data-field="gender" style="min-width:90px;">
+              ${['Female','Male','Unisex','Kids'].map(g => `<option ${p.gender===g?'selected':''}>${g}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field-row">
+            <label class="stock-switch ${p.inStock ? 'on' : ''}">
+              <input type="checkbox" data-field="inStock" ${p.inStock ? 'checked' : ''} onchange="toggleStock(${p.id}, this.checked)">
+              <span class="knob"></span>
+              <span>${p.inStock ? 'In Stock' : 'Out of Stock'}</span>
+            </label>
+            <div class="qty-stepper" title="Pieces available">
+              <button type="button" class="qty-btn" onclick="adjustQty(${p.id}, -1)" aria-label="One piece fewer">−</button>
+              <input type="number" class="qty-input" data-field="qty" value="${Number(p.qty) || 0}" min="0"
+                     onchange="setQty(${p.id}, this.value)" aria-label="Pieces available">
+              <button type="button" class="qty-btn" onclick="adjustQty(${p.id}, 1)" aria-label="One piece more">+</button>
+              <span class="qty-label">pieces</span>
+            </div>
+            <label class="checkbox-label">
+              <input type="checkbox" data-field="featured" ${p.featured ? 'checked' : ''} onchange="toggleFeatured(${p.id}, this.checked)"> ⭐ Featured
+            </label>
+          </div>
+          <details class="row-more">
+            <summary>More details (description, tags, image)</summary>
+            <div class="form-group" style="margin-top:0.5rem;">
+              <label class="form-label" for="desc-${p.id}">Description</label>
+              <textarea id="desc-${p.id}" class="field-input" rows="2" data-field="description" style="resize:vertical;">${escHtml(p.description || '')}</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="tags-${p.id}">Tags (comma-separated)</label>
+              <input id="tags-${p.id}" class="field-input" value="${escHtml((p.tags || []).join(', '))}" data-field="tags">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="img-upload-${p.id}">Upload New Image</label>
+              <input id="img-upload-${p.id}" type="file" class="field-input" accept="image/*" onchange="handleProductImageUpload(this, ${p.id})">
+              <input class="field-input img-input" value="${escHtml(p.image)}" data-field="image" placeholder="assets/image.png" style="margin-top:0.5rem;">
+            </div>
+          </details>
+        </div>
+        <div class="product-row-actions">
+          <button class="row-btn row-btn-save" onclick="saveProduct(${p.id})">💾 Save</button>
+          <button class="row-btn row-btn-del" onclick="deleteProduct(${p.id})">🗑 Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ── Instant stock / quantity / featured controls ── */
+  window.toggleStock = async function(id, checked) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    const wasQty = p.qty, wasStock = p.inStock;
+    p.qty = checked ? Math.max(1, Number(p.qty) || 0) : 0;
+    p.inStock = checked;
+    const ok = await persist(checked ? `✅ "${p.name}" is now IN stock (${p.qty} piece${p.qty !== 1 ? 's' : ''})` : `🚫 "${p.name}" marked OUT of stock`);
+    if (!ok) { p.qty = wasQty; p.inStock = wasStock; }
+    renderProductList();
+  };
+
+  async function updateQty(id, newQty) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    const wasQty = p.qty, wasStock = p.inStock;
+    p.qty = Math.max(0, Math.floor(Number(newQty) || 0));
+    p.inStock = p.qty > 0;
+    const ok = await persist(p.qty > 0 ? `📦 "${p.name}": ${p.qty} piece${p.qty !== 1 ? 's' : ''} left` : `🚫 "${p.name}" is now sold out`);
+    if (!ok) { p.qty = wasQty; p.inStock = wasStock; }
+    renderProductList();
+  }
+
+  window.adjustQty = (id, delta) => {
+    const p = products.find(x => x.id === id);
+    if (p) updateQty(id, (Number(p.qty) || 0) + delta);
+  };
+
+  window.setQty = (id, value) => updateQty(id, value);
+
+  window.toggleFeatured = async function(id, checked) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    const was = p.featured;
+    p.featured = checked;
+    const ok = await persist(checked ? `⭐ "${p.name}" is now featured` : `"${p.name}" removed from featured`);
+    if (!ok) { p.featured = was; renderProductList(); }
+  };
+
+  /* ── Row edit / delete ── */
+  window.saveProduct = async function(id) {
+    const row = document.querySelector(`.product-row[data-pid="${id}"]`);
+    const p = products.find(x => x.id === id);
+    if (!row || !p) return;
+
+    p.name        = row.querySelector('[data-field="name"]')?.value.trim() || p.name;
+    p.price       = parseFloat(row.querySelector('[data-field="price"]')?.value) || p.price;
+    p.category    = row.querySelector('[data-field="category"]')?.value.trim() || p.category;
+    p.gender      = row.querySelector('[data-field="gender"]')?.value || p.gender;
+    p.image       = row.querySelector('[data-field="image"]')?.value.trim() || p.image;
+    p.description = row.querySelector('[data-field="description"]')?.value.trim() ?? p.description;
+    p.tags        = (row.querySelector('[data-field="tags"]')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
+    p.qty         = Math.max(0, Math.floor(Number(row.querySelector('[data-field="qty"]')?.value ?? p.qty) || 0));
+    p.inStock     = p.qty > 0;
+    p.featured    = row.querySelector('[data-field="featured"]')?.checked ?? p.featured;
+
+    if (await persist(`✅ "${p.name}" saved!`)) renderProductList();
+  };
+
+  window.deleteProduct = async function(id) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+    const before = products;
+    products = products.filter(x => x.id !== id);
+    if (await persist(`🗑 "${p.name}" deleted.`)) {
+      renderProductList();
+    } else {
+      products = before;
+    }
+  };
 
   /* ── Image helpers ── */
   function readFileAsDataUrl(file) {
@@ -871,462 +969,105 @@
       const preview = row.querySelector('.product-row-img');
       if (imageInput) imageInput.value = dataUrl;
       if (preview) preview.src = dataUrl;
-      showToast('🖼 Image ready to save', 'success');
+      showToast('🖼 Image ready — click Save to keep it', 'success');
     } catch (error) {
       console.error(error);
       showToast('⚠️ Could not read this image', 'error');
     }
   };
 
-  /* ── Toast ── */
-  let toastTimer;
-  function showToast(msg, type = 'success') {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = `show ${type}`;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.className = ''; }, 2800);
-  }
+  /* ── Add product ── */
+  const addForm = $('add-product-form');
 
-  /* ── Screen Router ── */
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
+  $('add-product-btn').addEventListener('click', () => {
+    addForm.classList.add('open');
+    addForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
-  /* ── PIN Keypad Builder ── */
-  function buildKeypad(containerId, dotContainerId, length, onComplete) {
-    let pin = '';
+  $('cancel-add-btn').addEventListener('click', () => addForm.classList.remove('open'));
 
-    // Render dots
-    const dotCont = document.getElementById(dotContainerId);
-    dotCont.innerHTML = Array.from({length}, (_,i) => `<div class="pin-dot" id="${dotContainerId}-dot-${i}"></div>`).join('');
+  $('new-image-file').addEventListener('change', async () => {
+    const file = $('new-image-file').files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      $('new-image').value = dataUrl;
+      $('new-image-preview').src = dataUrl;
+      showToast('🖼 Image selected', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('⚠️ Could not read the selected image', 'error');
+    }
+  });
 
-    function updateDots() {
-      for (let i = 0; i < length; i++) {
-        const dot = document.getElementById(`${dotContainerId}-dot-${i}`);
-        dot?.classList.toggle('filled', i < pin.length);
-      }
+  $('save-new-product-btn').addEventListener('click', async () => {
+    const name = $('new-name').value.trim();
+    const price = parseFloat($('new-price').value);
+    if (!name)  { showToast('⚠️ Please enter a product name.', 'error'); return; }
+    if (!price) { showToast('⚠️ Please enter a valid price.', 'error'); return; }
+
+    const newId = Math.max(...products.map(p => p.id), 0) + 1;
+    const qty = $('new-instock').checked ? Math.max(0, Math.floor(Number($('new-qty').value) || 1)) : 0;
+    products.push({
+      id: newId,
+      name,
+      price,
+      qty,
+      category: $('new-category').value.trim() || 'Clothes',
+      gender: $('new-gender').value,
+      image: $('new-image').value.trim() || 'assets/logo.jpeg',
+      description: $('new-desc').value.trim(),
+      tags: $('new-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+      inStock: qty > 0,
+      featured: $('new-featured').checked
+    });
+
+    if (!(await persist(`✅ "${name}" added to the shop!`))) {
+      products = products.filter(p => p.id !== newId);
+      return;
     }
 
-    function press(val) {
-      if (val === 'back') {
-        pin = pin.slice(0, -1);
-        updateDots();
-        return;
-      }
-      if (pin.length >= length) return;
-      pin += val;
-      updateDots();
-      if (pin.length === length) {
-        setTimeout(() => {
-          const captured = pin;
-          pin = '';
-          updateDots();
-          onComplete(captured);
-        }, 200);
-      }
+    renderProductList();
+    addForm.classList.remove('open');
+    ['new-name','new-price','new-image','new-desc','new-tags'].forEach(id => { $(id).value = ''; });
+    $('new-qty').value = '1';
+    $('new-image-file').value = '';
+    $('new-image-preview').src = 'assets/logo.jpeg';
+    $('new-instock').checked = true;
+    $('new-featured').checked = false;
+  });
+
+  /* ── Nav actions ── */
+  $('refresh-btn').addEventListener('click', async () => {
+    try {
+      products = await apiLoadProducts();
+      renderStats();
+      renderProductList();
+      showToast('↺ Refreshed from server', 'success');
+    } catch (err) {
+      showToast(`⚠️ ${err.message}`, 'error');
     }
+  });
 
-    // Render keypad
-    const kp = document.getElementById(containerId);
-    kp.innerHTML = '';
-    [1,2,3,4,5,6,7,8,9].forEach(n => {
-      const btn = document.createElement('button');
-      btn.className = 'pin-key';
-      btn.textContent = n;
-      btn.type = 'button';
-      btn.addEventListener('click', () => press(String(n)));
-      kp.appendChild(btn);
-    });
-
-    // 0 key
-    const zeroBtn = document.createElement('button');
-    zeroBtn.className = 'pin-key zero';
-    zeroBtn.textContent = '0';
-    zeroBtn.type = 'button';
-    zeroBtn.addEventListener('click', () => press('0'));
-    kp.appendChild(zeroBtn);
-
-    // Backspace key
-    const backBtn = document.createElement('button');
-    backBtn.className = 'pin-key backspace';
-    backBtn.innerHTML = '⌫';
-    backBtn.type = 'button';
-    backBtn.addEventListener('click', () => press('back'));
-    kp.appendChild(backBtn);
-  }
-
-  /* ── Setup Screen ── */
-  let setupPin1 = '';
-
-  function initSetupScreen() {
-    showScreen('screen-setup');
-
-    // Step 1: enter new PIN
-    buildKeypad('setup-keypad-1', 'setup-dots-1', 4, pin => {
-      setupPin1 = pin;
-      document.getElementById('setup-step-1').style.display = 'none';
-      document.getElementById('setup-step-2').style.display = 'block';
-    });
-
-    // Step 2: confirm PIN
-    buildKeypad('setup-keypad-2', 'setup-dots-2', 4, pin => {
-      const errEl = document.getElementById('setup-error');
-      if (pin !== setupPin1) {
-        errEl.style.display = 'block';
-        errEl.textContent = "❌ PINs don't match. Please try again.";
-        void errEl.offsetWidth; // reset animation
-        errEl.style.animation = 'none';
-        requestAnimationFrame(() => { errEl.style.animation = ''; });
-        // Reset back to step 1
-        setTimeout(() => {
-          setupPin1 = '';
-          errEl.style.display = 'none';
-          document.getElementById('setup-step-2').style.display = 'none';
-          document.getElementById('setup-step-1').style.display = 'block';
-        }, 1400);
-        return;
-      }
-      storeHash(pin);
-      createSession();
-      showToast('✅ PIN created! Welcome, Stacey!', 'success');
-      showDashboard();
-    });
-  }
-
-  /* ── Login Screen ── */
-  let loginAttempts = 0;
-
-  function initLoginScreen() {
+  $('logout-btn').addEventListener('click', async () => {
+    const token = getToken();
+    sessionStorage.removeItem(TOKEN_KEY);
+    if (token) {
+      fetch('/api/admin/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => {});
+    }
     showScreen('screen-login');
-    loginAttempts = 0;
+    showToast('Logged out. See you soon! 👋', 'success');
+  });
 
-    buildKeypad('login-keypad', 'login-dots', 4, pin => {
-      if (checkPin(pin)) {
-        loginAttempts = 0;
-        document.getElementById('login-error').style.display = 'none';
-        createSession();
-        showToast('Welcome back, Stacey! 💅', 'success');
-        showDashboard();
-      } else {
-        loginAttempts++;
-        const errEl = document.getElementById('login-error');
-        errEl.style.display = 'block';
-        const remaining = Math.max(0, 5 - loginAttempts);
-        errEl.textContent = loginAttempts >= 5
-          ? '🔒 Too many attempts. Click "Forgot your PIN" to reset.'
-          : `❌ Wrong PIN. ${remaining} attempt${remaining !== 1 ? 's' : ''} left.`;
-        void errEl.offsetWidth;
-        errEl.style.animation = 'none';
-        requestAnimationFrame(() => { errEl.style.animation = ''; });
-      }
-    });
-
-    document.getElementById('forgot-link').onclick = e => {
-      e.preventDefault();
-      initForgotScreen();
-    };
-  }
-
-  /* ── Forgot Screen ── */
-  function initForgotScreen() {
-    showScreen('screen-forgot');
-    document.getElementById('reset-key-input').value = '';
-    document.getElementById('reset-error').style.display = 'none';
-
-    document.getElementById('reset-submit-btn').onclick = () => {
-      const key = document.getElementById('reset-key-input').value.trim();
-      if (key !== MASTER_RESET_KEY) {
-        const errEl = document.getElementById('reset-error');
-        errEl.style.display = 'block';
-        errEl.textContent = '❌ Wrong reset key. Try again or contact your family admin.';
-        return;
-      }
-      clearPin();
-      showToast('PIN cleared. Please set a new one.', 'success');
-      initSetupScreen();
-    };
-
-    document.getElementById('back-to-login-btn').onclick = initLoginScreen;
-  }
-
-  /* ── Dashboard ── */
-  function showDashboard() {
-    showScreen('screen-dashboard');
-    renderStats();
-    renderProductList();
-    initChangePinSection();
-    bindDashboardButtons();
-  }
-
-  function renderStats() {
-    const products = loadProducts();
-    const inStock  = products.filter(p => p.inStock).length;
-    const outOfStk = products.filter(p => !p.inStock).length;
-    const featured = products.filter(p => p.featured).length;
-    const totalVal = products.filter(p => p.inStock).reduce((s, p) => s + p.price, 0);
-
-    document.getElementById('dash-stats').innerHTML = `
-      <div class="stat-card">
-        <div class="stat-number">${products.length}</div>
-        <div class="stat-label">Total Products</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" style="color:var(--success);">${inStock}</div>
-        <div class="stat-label">In Stock</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" style="color:var(--error);">${outOfStk}</div>
-        <div class="stat-label">Out of Stock</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" style="color:var(--accent);">${featured}</div>
-        <div class="stat-label">Featured</div>
-      </div>
-    `;
-  }
-
-  function renderProductList() {
-    const products = loadProducts();
-    const list = document.getElementById('dash-product-list');
-    if (!list) return;
-
-    if (!products.length) {
-      list.innerHTML = `<p style="color:var(--muted);text-align:center;padding:2rem;">No products yet. Add one above!</p>`;
-      return;
-    }
-
-    list.innerHTML = products.map(p => `
-      <div class="product-row" data-pid="${p.id}">
-        <img src="${p.image}" alt="${p.name}" class="product-row-img" onerror="this.src='assets/logo.jpeg'">
-        <div class="product-row-fields">
-          <input class="field-input" value="${escHtml(p.name)}"  data-field="name"     placeholder="Product name">
-          <div class="field-row">
-            <input class="field-input price-input" type="number" value="${p.price}" data-field="price" min="0" placeholder="Price">
-            <select class="field-input select-input" data-field="category" style="min-width:100px;">
-              ${['Footwear','Bags','Clothes'].map(c => `<option ${p.category===c?'selected':''}>${c}</option>`).join('')}
-            </select>
-            <select class="field-input select-input" data-field="gender" style="min-width:90px;">
-              ${['Female','Male','Unisex'].map(g => `<option ${p.gender===g?'selected':''}>${g}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field-row">
-            <label class="checkbox-label">
-              <input type="checkbox" data-field="inStock"  ${p.inStock  ? 'checked' : ''}> In Stock
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" data-field="featured" ${p.featured ? 'checked' : ''}> Featured
-            </label>
-          </div>
-          <div class="form-group" style="margin-top:0.5rem;">
-            <label class="form-label" for="img-upload-${p.id}">Upload New Image</label>
-            <input id="img-upload-${p.id}" type="file" class="field-input" accept="image/*" onchange="handleProductImageUpload(this, ${p.id})">
-            <input class="field-input img-input" value="${escHtml(p.image)}" data-field="image" placeholder="assets/image.png" style="margin-top:0.5rem;">
-          </div>
-        </div>
-        <div class="product-row-actions">
-          <button class="row-btn row-btn-save" onclick="saveProduct(${p.id})">💾 Save</button>
-          <button class="row-btn row-btn-del"  onclick="deleteProduct(${p.id})">🗑 Del</button>
-        </div>
-      </div>`).join('');
-  }
-
-  function escHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  window.saveProduct = function(id) {
-    const products = loadProducts();
-    const row = document.querySelector(`.product-row[data-pid="${id}"]`);
-    if (!row) return;
-    const p = products.find(x => x.id === id);
-    if (!p) return;
-
-    p.name     = row.querySelector('[data-field="name"]')?.value.trim()   || p.name;
-    p.price    = parseFloat(row.querySelector('[data-field="price"]')?.value) || p.price;
-    p.category = row.querySelector('[data-field="category"]')?.value       || p.category;
-    p.gender   = row.querySelector('[data-field="gender"]')?.value         || p.gender;
-    p.image    = row.querySelector('[data-field="image"]')?.value.trim()   || p.image;
-    p.inStock  = row.querySelector('[data-field="inStock"]')?.checked  ?? p.inStock;
-    p.featured = row.querySelector('[data-field="featured"]')?.checked ?? p.featured;
-
-    saveProducts(products);
-    renderStats();
-    showToast(`✅ "${p.name}" saved!`, 'success');
-  };
-
-  window.deleteProduct = function(id) {
-    const products = loadProducts();
-    const p = products.find(x => x.id === id);
-    if (!p) return;
-    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
-    saveProducts(products.filter(x => x.id !== id));
-    renderStats();
-    renderProductList();
-    showToast(`🗑 "${p.name}" deleted.`, 'error');
-  };
-
-  function bindDashboardButtons() {
-    // Logout
-    document.getElementById('logout-btn').onclick = () => {
-      destroySession();
-      initLoginScreen();
-    };
-
-    // Add Product toggle
-    const addForm = document.getElementById('add-product-form');
-    const newImageFile = document.getElementById('new-image-file');
-    const newImageInput = document.getElementById('new-image');
-    const newImagePreview = document.getElementById('new-image-preview');
-
-    if (newImageFile && newImageInput && newImagePreview) {
-      newImageFile.addEventListener('change', async () => {
-        const file = newImageFile.files?.[0];
-        if (!file) return;
-        try {
-          const dataUrl = await readFileAsDataUrl(file);
-          newImageInput.value = dataUrl;
-          newImagePreview.src = dataUrl;
-          showToast('🖼 Image selected', 'success');
-        } catch (error) {
-          console.error(error);
-          showToast('⚠️ Could not read the selected image', 'error');
-        }
-      });
-    }
-
-    document.getElementById('add-product-btn').onclick = () => {
-      addForm.classList.add('open');
-      addForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
-    document.getElementById('cancel-add-btn').onclick = () => {
-      addForm.classList.remove('open');
-    };
-
-    // Save new product
-    document.getElementById('save-new-product-btn').onclick = async () => {
-      const name  = document.getElementById('new-name').value.trim();
-      const price = parseFloat(document.getElementById('new-price').value);
-      if (!name)   { showToast('⚠️ Please enter a product name.', 'error'); return; }
-      if (!price)  { showToast('⚠️ Please enter a valid price.', 'error'); return; }
-
-      const products = loadProducts();
-      const imageInput = document.getElementById('new-image');
-      const fileInput = document.getElementById('new-image-file');
-      const preview = document.getElementById('new-image-preview');
-      let imageValue = imageInput.value.trim();
-
-      if (fileInput.files?.[0]) {
-        try {
-          imageValue = await readFileAsDataUrl(fileInput.files[0]);
-        } catch (error) {
-          console.error(error);
-          showToast('⚠️ Could not read the selected image', 'error');
-          return;
-        }
-      }
-
-      const newId = Math.max(...products.map(p => p.id), 0) + 1;
-      products.push({
-        id: newId,
-        name,
-        price,
-        category: document.getElementById('new-category').value,
-        gender:   document.getElementById('new-gender').value,
-        image:    imageValue || 'assets/product_sneakers.png',
-        description: document.getElementById('new-desc').value.trim() || '',
-        tags: document.getElementById('new-tags').value.split(',').map(t => t.trim()).filter(Boolean),
-        inStock:  document.getElementById('new-instock').checked,
-        featured: document.getElementById('new-featured').checked,
-      });
-      saveProducts(products);
-      renderStats();
-      renderProductList();
-      addForm.classList.remove('open');
-
-      // Clear form
-      ['new-name','new-price','new-image','new-desc','new-tags'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
-      if (fileInput) fileInput.value = '';
-      if (preview) preview.src = 'assets/logo.jpeg';
-      document.getElementById('new-instock').checked  = true;
-      document.getElementById('new-featured').checked = false;
-
-      showToast(`✅ "${name}" added to catalog!`, 'success');
-    };
-
-    // Reset products
-    document.getElementById('reset-products-btn').onclick = () => {
-      if (!confirm('⚠️ Reset ALL products to defaults? You will lose any custom products.')) return;
-      localStorage.removeItem('tacey_products');
-      renderStats();
-      renderProductList();
-      showToast('↺ Products reset to defaults.', 'success');
-    };
-
-    // Change PIN toggle
-    document.getElementById('change-pin-toggle').onclick = () => {
-      const sec = document.getElementById('change-pin-section');
-      sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
-      sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
-    document.getElementById('cancel-change-pin').onclick = () => {
-      document.getElementById('change-pin-section').style.display = 'none';
-    };
-  }
-
-  /* ── Change PIN Section ── */
-  let changePinFirst = '';
-
-  function initChangePinSection() {
-    changePinFirst = '';
-
-    buildKeypad('change-keypad-1', 'change-dots-1', 4, pin => {
-      changePinFirst = pin;
-      document.getElementById('change-step-1').style.display = 'none';
-      document.getElementById('change-step-2').style.display = 'block';
-    });
-
-    buildKeypad('change-keypad-2', 'change-dots-2', 4, pin => {
-      const errEl = document.getElementById('change-error');
-      if (pin !== changePinFirst) {
-        errEl.style.display = 'block';
-        errEl.textContent = "❌ PINs don't match. Try again.";
-        changePinFirst = '';
-        setTimeout(() => {
-          errEl.style.display = 'none';
-          document.getElementById('change-step-2').style.display = 'none';
-          document.getElementById('change-step-1').style.display = 'block';
-        }, 1400);
-        return;
-      }
-      storeHash(pin);
-      errEl.style.display = 'none';
-      document.getElementById('change-pin-section').style.display = 'none';
-      document.getElementById('change-step-2').style.display = 'none';
-      document.getElementById('change-step-1').style.display = 'block';
-      showToast('🔑 PIN changed successfully!', 'success');
-    });
-  }
-
-  /* ── Boot ── */
-  (function boot() {
-    // Already logged in via valid session?
-    if (isSessionValid() && getStoredHash()) {
-      showDashboard();
-      return;
-    }
-    // First time — no PIN set?
-    if (!getStoredHash()) {
-      initSetupScreen();
-      return;
-    }
-    // Normal login
-    initLoginScreen();
+  /* ── Boot: resume session if the token is still valid ── */
+  (async function boot() {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch('/api/admin/session', { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { await enterDashboard(); return; }
+    } catch { /* server unreachable — stay on login */ }
+    sessionStorage.removeItem(TOKEN_KEY);
   })();
   </script>
 </body>

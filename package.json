@@ -4,6 +4,7 @@
   "private": true,
   "description": "Stacey Collections storefront and admin API",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/products-api.test.js"
   }
 }

@@ -14,7 +14,7 @@ async function loadProductsFromApi() {
     if (!res.ok) throw new Error('Failed to fetch');
     const data = await res.json();
     if (Array.isArray(data)) {
-      PRODUCTS = data;
+      PRODUCTS = normalizeQty(data);
       saveProducts();
       return PRODUCTS;
     }
@@ -95,13 +95,95 @@ let cart = JSON.parse(localStorage.getItem('tacey_cart') || '[]');
 let activeFilters = { category: 'all', gender: 'all', search: '' };
 let quizAnswers = {};
 let currentQuizStep = 1;
-const TOTAL_QUIZ_STEPS = 3;
+const TOTAL_QUIZ_STEPS = 4; // 3 questions + selfie session
+let quizSelfie = null;      // data URL — stays in the browser only
+let quizCamStream = null;
 
 /* ================================================================
    HELPERS
    ================================================================ */
 const $ = id => document.getElementById(id);
 const fmt = n => `KES ${Number(n).toLocaleString('en-KE')}`;
+
+// Quantity may be missing on older records — derive it from inStock.
+function normalizeQty(list) {
+  list.forEach(p => {
+    if (!Number.isFinite(Number(p.qty))) p.qty = p.inStock ? 1 : 0;
+    p.qty = Math.max(0, Math.floor(Number(p.qty)));
+    p.inStock = p.qty > 0;
+  });
+  return list;
+}
+
+/* ── Storefront toast (bottom-center feedback bubble) ── */
+let shopToastTimer;
+function shopToast(msg) {
+  let el = document.getElementById('shop-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'shop-toast';
+    el.setAttribute('role', 'status');
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(shopToastTimer);
+  shopToastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+/* ── Scroll-reveal (fade-up as sections enter the viewport) ── */
+const revealObserver = ('IntersectionObserver' in window) && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' })
+  : null;
+
+function observeReveals(root = document) {
+  if (!revealObserver) return;
+  root.querySelectorAll('.product-card, .step-card, .dept-card, .highlights-card, .instagram-card, .shelf')
+    .forEach((el, i) => {
+      if (el.classList.contains('reveal') || el.classList.contains('revealed')) return;
+      el.classList.add('reveal');
+      el.style.transitionDelay = `${Math.min(i % 6, 5) * 60}ms`;
+      revealObserver.observe(el);
+    });
+}
+
+/* ================================================================
+   DEPARTMENTS (Women / Men / Kids pages)
+   ================================================================ */
+const DEPARTMENTS = {
+  women: {
+    crumb: 'Women', emoji: '👠',
+    title: "Women's Collection",
+    tagline: 'Heels, gowns, bags and everyday glam — curated for her.',
+    genders: ['Female', 'Unisex']
+  },
+  men: {
+    crumb: 'Men', emoji: '👟',
+    title: "Men's Collection",
+    tagline: 'Sharp fits, clean kicks and versatile streetwear — built for him.',
+    genders: ['Male', 'Unisex']
+  },
+  kids: {
+    crumb: 'Kids', emoji: '🧸',
+    title: "Kids' Corner",
+    tagline: 'Playful, comfy and adorable picks for the little trendsetters.',
+    genders: ['Kids']
+  }
+};
+
+function currentDeptKey() {
+  const seg = location.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html$/, '');
+  if (DEPARTMENTS[seg]) return seg;
+  const q = new URLSearchParams(location.search).get('dept');
+  return DEPARTMENTS[q] ? q : null;
+}
 
 /* ================================================================
    PRODUCT RENDERING
@@ -118,6 +200,50 @@ function getFilteredProducts() {
   });
 }
 
+function productCardHTML(p) {
+  return `
+    <article class="product-card" data-id="${p.id}" tabindex="0" role="button"
+             aria-label="View details for ${p.name}" style="${!p.inStock ? 'opacity:0.5;' : ''}">
+      <div class="product-img-container">
+        <img src="${p.image}" alt="${p.name}" class="product-img" loading="lazy">
+        <span class="product-badge">${p.gender}</span>
+        ${p.featured ? `<span class="product-badge" style="left:auto;right:0.75rem;color:var(--color-primary);border-color:var(--color-primary-glow);">★ Featured</span>` : ''}
+        ${!p.inStock ? `<span class="product-badge" style="top:auto;bottom:0.75rem;left:0.75rem;color:var(--color-error);">Out of Stock</span>` : ''}
+        ${p.inStock && p.qty <= 3 ? `<span class="product-badge low-stock-badge" style="top:auto;bottom:0.75rem;left:0.75rem;">🔥 Only ${p.qty} left</span>` : ''}
+      </div>
+      <div class="product-info">
+        <span class="product-cat">${p.category}</span>
+        <h3 class="product-title">${p.name}</h3>
+        <div class="product-price-row">
+          <span class="product-price">${p.price.toLocaleString('en-KE')}</span>
+          <button class="product-card-btn" data-id="${p.id}" aria-label="Add ${p.name} to cart"
+                  ${!p.inStock ? 'disabled' : ''}>
+            ${p.inStock ? '+ Add' : 'Sold Out'}
+          </button>
+        </div>
+      </div>
+    </article>`;
+}
+
+function bindProductCardEvents(root) {
+  root.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.product-card-btn')) return;
+      openDetailModal(+card.dataset.id);
+    });
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetailModal(+card.dataset.id); }
+    });
+  });
+
+  root.querySelectorAll('.product-card-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      addToCart(+btn.dataset.id);
+    });
+  });
+}
+
 function renderProducts(list = getFilteredProducts()) {
   const grid = $('product-grid-container');
   if (!grid) return;
@@ -131,46 +257,99 @@ function renderProducts(list = getFilteredProducts()) {
     return;
   }
 
-  grid.innerHTML = list.map(p => `
-    <article class="product-card" data-id="${p.id}" tabindex="0" role="button"
-             aria-label="View details for ${p.name}" style="${!p.inStock ? 'opacity:0.5;' : ''}">
-      <div class="product-img-container">
-        <img src="${p.image}" alt="${p.name}" class="product-img" loading="lazy">
-        <span class="product-badge">${p.gender}</span>
-        ${p.featured ? `<span class="product-badge" style="left:auto;right:0.75rem;color:var(--color-primary);border-color:var(--color-primary-glow);">★ Featured</span>` : ''}
-        ${!p.inStock ? `<span class="product-badge" style="top:auto;bottom:0.75rem;left:0.75rem;color:var(--color-error);">Out of Stock</span>` : ''}
-      </div>
-      <div class="product-info">
-        <span class="product-cat">${p.category}</span>
-        <h3 class="product-title">${p.name}</h3>
-        <div class="product-price-row">
-          <span class="product-price">${p.price.toLocaleString('en-KE')}</span>
-          <button class="product-card-btn" data-id="${p.id}" aria-label="Add ${p.name} to cart"
-                  ${!p.inStock ? 'disabled' : ''}>
-            ${p.inStock ? '+ Add' : 'Sold Out'}
-          </button>
+  grid.innerHTML = list.map(productCardHTML).join('');
+  bindProductCardEvents(grid);
+  observeReveals(grid);
+}
+
+/* ================================================================
+   DEPARTMENT PAGE — hero + horizontal shelves
+   ================================================================ */
+function renderDeptPage() {
+  const deptKey = currentDeptKey();
+  const container = $('shelves-container');
+  if (!deptKey || !container) return false;
+
+  const dept = DEPARTMENTS[deptKey];
+  document.title = `${dept.crumb} | Tacey Collections`;
+
+  // Hero
+  const crumb = $('dept-crumb');   if (crumb)   crumb.textContent = dept.crumb;
+  const emoji = $('dept-emoji');   if (emoji)   emoji.textContent = dept.emoji;
+  const title = $('dept-title');   if (title)   title.textContent = dept.title;
+  const tag   = $('dept-tagline'); if (tag)     tag.textContent = dept.tagline;
+  document.body.dataset.dept = deptKey;
+
+  // Highlight the active department in nav + switcher chips
+  document.querySelectorAll('[data-dept-link]').forEach(link => {
+    link.classList.toggle('active', link.dataset.deptLink === deptKey);
+  });
+
+  const deptProducts = PRODUCTS.filter(p => dept.genders.includes(p.gender));
+
+  // Known shelf styling; any brand-new category Stacey creates in the admin
+  // still gets its own shelf via the fallback.
+  const SHELF_META = {
+    Footwear:    { icon: '👟', name: 'The Footwear Shelf',    blurb: 'Sneakers, heels and everything in between' },
+    Bags:        { icon: '👜', name: 'The Bag Shelf',         blurb: 'Carry your style with you' },
+    Clothes:     { icon: '👗', name: 'The Wardrobe Shelf',    blurb: 'Outfits for every occasion' },
+    Hats:        { icon: '🧢', name: 'The Hat Shelf',         blurb: 'Top off every look' },
+    Accessories: { icon: '✨', name: 'The Accessories Shelf', blurb: 'The details that make the outfit' },
+    Jewellery:   { icon: '💎', name: 'The Jewellery Shelf',   blurb: 'A little sparkle goes a long way' }
+  };
+  const shelfMetaFor = cat => SHELF_META[cat] ||
+    { icon: '🛍️', name: `The ${cat} Shelf`, blurb: `Fresh ${String(cat).toLowerCase()} picks from Stacey` };
+
+  const categories = [...new Set(deptProducts.map(p => p.category))];
+  const shelves = [
+    { key: 'featured', icon: '⭐', name: 'Featured Picks', blurb: "Stacey's personal favourites this season", items: deptProducts.filter(p => p.featured && p.inStock) },
+    ...categories.map(cat => ({ key: cat, ...shelfMetaFor(cat), items: deptProducts.filter(p => p.category === cat) }))
+  ].filter(s => s.items.length);
+
+  if (!shelves.length) {
+    container.innerHTML = `
+      <div class="shelf-empty">
+        <p class="shelf-empty-emoji">${dept.emoji}</p>
+        <h2>New stock is on its way!</h2>
+        <p>Stacey is curating fresh pieces for this department right now.
+           Message her on WhatsApp and she'll find exactly what you're looking for.</p>
+        <a href="https://wa.me/254702179011?text=${encodeURIComponent(`Hi Stacey! I'm looking for ${dept.crumb.toLowerCase()}' items — what do you have coming in?`)}"
+           class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer">💬 Ask Stacey What's Coming</a>
+      </div>`;
+    return true;
+  }
+
+  container.innerHTML = shelves.map(s => `
+    <div class="shelf" data-shelf="${s.key}">
+      <div class="shelf-header">
+        <div>
+          <h2 class="shelf-title"><span class="shelf-icon" aria-hidden="true">${s.icon}</span> ${s.name}</h2>
+          <p class="shelf-blurb">${s.blurb}</p>
+        </div>
+        <div class="shelf-arrows">
+          <button class="shelf-arrow" data-dir="-1" aria-label="Scroll ${s.name} left">‹</button>
+          <button class="shelf-arrow" data-dir="1" aria-label="Scroll ${s.name} right">›</button>
         </div>
       </div>
-    </article>`).join('');
+      <div class="shelf-track" tabindex="0" role="group" aria-label="${s.name}">
+        ${s.items.map(productCardHTML).join('')}
+      </div>
+    </div>`).join('');
 
-  // Card click → open detail modal
-  grid.querySelectorAll('.product-card').forEach(card => {
-    card.addEventListener('click', e => {
-      if (e.target.closest('.product-card-btn')) return;
-      openDetailModal(+card.dataset.id);
-    });
-    card.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetailModal(+card.dataset.id); }
+  bindProductCardEvents(container);
+  observeReveals(container);
+
+  // Arrow scrolling
+  container.querySelectorAll('.shelf').forEach(shelf => {
+    const track = shelf.querySelector('.shelf-track');
+    shelf.querySelectorAll('.shelf-arrow').forEach(btn => {
+      btn.addEventListener('click', () => {
+        track.scrollBy({ left: Number(btn.dataset.dir) * track.clientWidth * 0.8, behavior: 'smooth' });
+      });
     });
   });
 
-  // Add-to-cart buttons
-  grid.querySelectorAll('.product-card-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      addToCart(+btn.dataset.id);
-    });
-  });
+  return true;
 }
 
 /* ================================================================
@@ -190,6 +369,11 @@ function openDetailModal(id) {
       <span class="product-cat">${p.category} · ${p.gender}</span>
       <h2 class="details-title" id="modal-title">${p.name}</h2>
       <p class="details-price">${p.price.toLocaleString('en-KE')}</p>
+      <p class="details-availability ${!p.inStock ? 'sold-out' : p.qty <= 3 ? 'low' : ''}">
+        ${!p.inStock ? '🚫 Currently out of stock — ask Stacey about a restock'
+          : p.qty <= 3 ? `🔥 Almost gone — only ${p.qty} piece${p.qty !== 1 ? 's' : ''} left`
+          : `✔ In stock — ${p.qty} pieces available`}
+      </p>
       <p class="details-desc">${p.description}</p>
       <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:auto;">
         <button class="btn btn-primary" id="modal-add-cart-btn" ${!p.inStock ? 'disabled' : ''}>
@@ -221,11 +405,17 @@ function addToCart(id) {
   const p = PRODUCTS.find(x => x.id === id);
   if (!p || !p.inStock) return;
   const existing = cart.find(i => i.id === id);
+  const inBag = existing ? existing.qty : 0;
+  if (inBag >= p.qty) {
+    shopToast(`Only ${p.qty} piece${p.qty !== 1 ? 's' : ''} of "${p.name}" available — all in your bag already!`);
+    return;
+  }
   if (existing) { existing.qty += 1; }
   else { cart.push({ id, qty: 1 }); }
   saveCart();
   renderCart();
   flashCartBadge();
+  shopToast(`✓ "${p.name}" added to your bag`);
 }
 
 function removeFromCart(id) {
@@ -237,7 +427,14 @@ function removeFromCart(id) {
 function changeQty(id, delta) {
   const item = cart.find(i => i.id === id);
   if (!item) return;
-  item.qty = Math.max(1, item.qty + delta);
+  const p = PRODUCTS.find(x => x.id === id);
+  const max = p ? Math.max(1, p.qty) : Infinity;
+  const wanted = item.qty + delta;
+  if (wanted > max) {
+    shopToast(`Only ${max} piece${max !== 1 ? 's' : ''} available right now`);
+    return;
+  }
+  item.qty = Math.max(1, wanted);
   saveCart();
   renderCart();
 }
@@ -370,7 +567,9 @@ function closeCart() {
 function openQuiz() {
   const modal = $('quiz-modal');
   quizAnswers = {};
+  quizSelfie = null;
   currentQuizStep = 1;
+  resetSelfieUI();
   renderQuizStep();
   modal?.showModal();
 }
@@ -381,19 +580,78 @@ function renderQuizStep() {
   const progress = $('quiz-progress');
   if (progress) progress.style.width = `${((currentQuizStep - 1) / TOTAL_QUIZ_STEPS) * 100}%`;
   const indicator = $('quiz-step-indicator');
-  if (indicator) indicator.textContent = currentQuizStep <= TOTAL_QUIZ_STEPS ? `Step ${currentQuizStep} of ${TOTAL_QUIZ_STEPS}` : 'Your Matches!';
+  if (indicator) indicator.textContent = currentQuizStep === 4 ? 'Lights, camera… 🎬'
+    : currentQuizStep <= TOTAL_QUIZ_STEPS ? `Step ${currentQuizStep} of ${TOTAL_QUIZ_STEPS}` : 'Your Matches!';
   const prevBtn = $('quiz-prev-btn');
   if (prevBtn) prevBtn.style.visibility = currentQuizStep > 1 && currentQuizStep <= TOTAL_QUIZ_STEPS ? 'visible' : 'hidden';
+  if (currentQuizStep !== 4) stopQuizCamera();
 }
 
-function showQuizResults() {
-  const container = $('quiz-results-container');
-  if (!container) return;
-  const progress = $('quiz-progress');
-  if (progress) progress.style.width = '100%';
-  const indicator = $('quiz-step-indicator');
-  if (indicator) indicator.textContent = 'Your Matches!';
+/* ── Selfie session (all local — nothing is uploaded) ── */
+function resetSelfieUI() {
+  stopQuizCamera();
+  const vid = $('quiz-cam-video'), img = $('quiz-selfie-preview'), ph = $('quiz-cam-placeholder');
+  if (vid) vid.hidden = true;
+  if (img) { img.hidden = true; img.src = ''; }
+  if (ph) ph.hidden = false;
+  toggleSelfieActions('start');
+}
 
+function toggleSelfieActions(mode) {
+  const map = { start: 'quiz-cam-actions', snap: 'quiz-snap-actions', done: 'quiz-selfie-actions' };
+  Object.values(map).forEach(id => { const el = $(id); if (el) el.hidden = true; });
+  const el = $(map[mode]);
+  if (el) el.hidden = false;
+}
+
+async function startQuizCamera() {
+  try {
+    quizCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    const vid = $('quiz-cam-video');
+    vid.srcObject = quizCamStream;
+    vid.hidden = false;
+    $('quiz-cam-placeholder').hidden = true;
+    $('quiz-selfie-preview').hidden = true;
+    toggleSelfieActions('snap');
+  } catch (err) {
+    console.warn('Camera unavailable:', err);
+    shopToast('📷 Camera not available — you can upload a photo instead');
+  }
+}
+
+function stopQuizCamera() {
+  if (quizCamStream) {
+    quizCamStream.getTracks().forEach(t => t.stop());
+    quizCamStream = null;
+  }
+  const vid = $('quiz-cam-video');
+  if (vid) { vid.srcObject = null; vid.hidden = true; }
+}
+
+function snapQuizSelfie() {
+  const vid = $('quiz-cam-video');
+  if (!vid || !vid.videoWidth) return;
+  const size = Math.min(vid.videoWidth, vid.videoHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 640;
+  const ctx = canvas.getContext('2d');
+  // Mirror it so the photo matches what they saw in the preview.
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(vid, (vid.videoWidth - size) / 2, (vid.videoHeight - size) / 2, size, size, 0, 0, canvas.width, canvas.height);
+  setQuizSelfie(canvas.toDataURL('image/jpeg', 0.92));
+}
+
+function setQuizSelfie(dataUrl) {
+  quizSelfie = dataUrl;
+  stopQuizCamera();
+  const img = $('quiz-selfie-preview');
+  if (img) { img.src = dataUrl; img.hidden = false; }
+  $('quiz-cam-placeholder').hidden = true;
+  toggleSelfieActions('done');
+}
+
+function getQuizMatches() {
   let results = PRODUCTS.filter(p => p.inStock);
   if (quizAnswers.gender && quizAnswers.gender !== 'all') {
     results = results.filter(p => p.gender === quizAnswers.gender || p.gender === 'Unisex');
@@ -402,26 +660,164 @@ function showQuizResults() {
     results = results.filter(p => p.category === quizAnswers.category);
   }
   if (!results.length) results = PRODUCTS.filter(p => p.inStock).slice(0, 3);
+  return results;
+}
 
-  container.innerHTML = `
-    <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1rem;color:var(--color-accent);">✨ Perfect picks for you:</h3>
-    ${results.map(p => `
-      <div style="display:flex;gap:1rem;padding:0.85rem;border:1px solid var(--color-border);border-radius:10px;margin-bottom:0.75rem;cursor:pointer;transition:border-color 0.2s;"
-           onclick="$('quiz-modal').close();openDetailModal(${p.id});" onmouseenter="this.style.borderColor='var(--color-primary-glow)'" onmouseleave="this.style.borderColor='var(--color-border)'">
-        <img src="${p.image}" alt="${p.name}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0;">
-        <div>
-          <p style="font-weight:600;font-size:0.95rem;">${p.name}</p>
-          <p style="color:var(--color-text-muted);font-size:0.82rem;">${p.category} · ${p.gender}</p>
-          <p style="color:var(--color-accent);font-weight:700;margin-top:0.25rem;">${fmt(p.price)}</p>
+function quizResultRow(p) {
+  return `
+    <div style="display:flex;gap:1rem;padding:0.85rem;border:1px solid var(--color-border);border-radius:10px;margin-bottom:0.75rem;cursor:pointer;transition:border-color 0.2s;"
+         onclick="$('quiz-modal').close();openDetailModal(${p.id});" onmouseenter="this.style.borderColor='var(--color-primary-glow)'" onmouseleave="this.style.borderColor='var(--color-border)'">
+      <img src="${p.image}" alt="${p.name}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0;">
+      <div>
+        <p style="font-weight:600;font-size:0.95rem;">${p.name}</p>
+        <p style="color:var(--color-text-muted);font-size:0.82rem;">${p.category} · ${p.gender}</p>
+        <p style="color:var(--color-accent);font-weight:700;margin-top:0.25rem;">${fmt(p.price)}</p>
+      </div>
+    </div>`;
+}
+
+function showQuizResults() {
+  const container = $('quiz-results-container');
+  if (!container) return;
+  stopQuizCamera();
+  const progress = $('quiz-progress');
+  if (progress) progress.style.width = '100%';
+  const indicator = $('quiz-step-indicator');
+  if (indicator) indicator.textContent = quizSelfie ? 'Showtime! 🎭' : 'Your Matches!';
+
+  const results = getQuizMatches();
+
+  if (quizSelfie) {
+    // ── The private fashion show: curtains part to reveal the shopper's look ──
+    container.innerHTML = `
+      <div class="show-stage" id="show-stage">
+        <div class="show-content">
+          <p class="show-billing">✦ Tonight, on the Tacey runway ✦</p>
+          <div class="show-star-frame">
+            <img src="${quizSelfie}" alt="Your selfie" class="show-star-img">
+            <span class="show-spotlight" aria-hidden="true"></span>
+          </div>
+          <h3 class="show-headline">Starring: You</h3>
+          <p class="show-sub">Styled by Stacey with your perfect matches</p>
+          <div class="show-picks">
+            ${results.slice(0, 3).map(p => `
+              <button class="show-pick" onclick="$('quiz-modal').close();openDetailModal(${p.id});">
+                <img src="${p.image}" alt="${p.name}">
+                <span class="show-pick-name">${p.name}</span>
+                <span class="show-pick-price">${fmt(p.price)}</span>
+              </button>`).join('')}
+          </div>
+          <div class="show-actions">
+            <button class="btn btn-primary" id="save-look-btn">💾 Save My Look Card</button>
+            <a class="btn btn-whatsapp"
+               href="https://wa.me/254702179011?text=${encodeURIComponent(`Hi Stacey! 🎭 The Style Matcher matched me with: ${results.slice(0, 3).map(p => p.name).join(', ')}. What do you think fits me best?`)}"
+               target="_blank" rel="noopener noreferrer">💬 Ask Stacey About My Look</a>
+          </div>
         </div>
-      </div>`).join('')}
-    <button class="btn btn-ghost" style="width:100%;margin-top:0.5rem;" onclick="$('quiz-modal').close()">Browse Full Catalog</button>`;
+        <div class="curtain curtain-left" aria-hidden="true"></div>
+        <div class="curtain curtain-right" aria-hidden="true"></div>
+        <button class="show-reveal-btn" id="open-curtains-btn">🎭 Open the Curtains</button>
+      </div>`;
+
+    $('open-curtains-btn')?.addEventListener('click', () => {
+      $('show-stage')?.classList.add('open');
+      setTimeout(() => $('open-curtains-btn')?.remove(), 900);
+    });
+    $('save-look-btn')?.addEventListener('click', () => downloadLookCard(results.slice(0, 2)));
+  } else {
+    container.innerHTML = `
+      <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1rem;color:var(--color-accent);">✨ Perfect picks for you:</h3>
+      ${results.map(quizResultRow).join('')}
+      <button class="btn btn-ghost" style="width:100%;margin-top:0.5rem;" onclick="$('quiz-modal').close()">Browse Full Catalog</button>`;
+  }
 
   const steps = document.querySelectorAll('.quiz-step');
   steps.forEach(s => s.classList.remove('active'));
   container.classList.add('active');
   const prevBtn = $('quiz-prev-btn');
   if (prevBtn) prevBtn.style.visibility = 'hidden';
+}
+
+/* ── Look card: selfie + matches composed on a canvas, saved locally ── */
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function downloadLookCard(picks) {
+  try {
+    const W = 900, H = 1280;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#0d0a12';
+    ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W / 2, 300, 60, W / 2, 300, 500);
+    glow.addColorStop(0, 'rgba(255,42,133,0.28)');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
+    // Selfie in a circular gold-rimmed frame
+    const selfieImg = await loadImage(quizSelfie);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W / 2, 300, 200, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(selfieImg, W / 2 - 200, 100, 400, 400);
+    ctx.restore();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#e9c48b';
+    ctx.beginPath();
+    ctx.arc(W / 2, 300, 204, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 56px sans-serif';
+    ctx.fillText('My Tacey Look', W / 2, 590);
+    ctx.fillStyle = '#e9c48b';
+    ctx.font = 'italic 30px serif';
+    ctx.fillText('Style that speaks for you', W / 2, 640);
+
+    // Matched pieces
+    const y = 700, size = 330, gap = 40;
+    const startX = picks.length === 1 ? (W - size) / 2 : (W - size * picks.length - gap * (picks.length - 1)) / 2;
+    for (let i = 0; i < picks.length; i++) {
+      const img = await loadImage(picks[i].image);
+      const x = startX + i * (size + gap);
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(x, y, size, size, 24);
+      ctx.clip();
+      ctx.drawImage(img, x, y, size, size);
+      ctx.restore();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 26px sans-serif';
+      ctx.fillText(picks[i].name.length > 24 ? picks[i].name.slice(0, 23) + '…' : picks[i].name, x + size / 2, y + size + 44);
+      ctx.fillStyle = '#e9c48b';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText(fmt(picks[i].price), x + size / 2, y + size + 84);
+    }
+
+    ctx.fillStyle = '#ff2a85';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText('Tacey Collections · WhatsApp +254 702 179 011', W / 2, H - 60);
+
+    const link = document.createElement('a');
+    link.download = 'my-tacey-look.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.92);
+    link.click();
+    shopToast('💾 Look card saved — share it with Stacey!');
+  } catch (err) {
+    console.error(err);
+    shopToast('⚠️ Could not create the look card on this device');
+  }
 }
 
 /* ================================================================
@@ -476,7 +872,7 @@ function pickRandom(arr) {
 function aiGetProducts(category, gender) {
   let list = PRODUCTS.filter(p => p.inStock);
   if (category) list = list.filter(p => p.category.toLowerCase() === category.toLowerCase());
-  if (gender)   list = list.filter(p => p.gender === gender || p.gender === 'Unisex');
+  if (gender)   list = list.filter(p => p.gender === gender || (gender !== 'Kids' && p.gender === 'Unisex'));
   return list;
 }
 
@@ -532,7 +928,7 @@ function processAIQuery(raw) {
 
   /* --- Footwear queries --- */
   if (/shoe|shoes|sneaker|heel|boot|footwear|kicks/.test(q)) {
-    const gender = /men|male|guys|his/.test(q) ? 'Male' : /women|female|ladies|girls|her/.test(q) ? 'Female' : null;
+    const gender = /kid|child|children|baby|toddler/.test(q) ? 'Kids' : /men|male|guys|his/.test(q) ? 'Male' : /women|female|ladies|girls|her/.test(q) ? 'Female' : null;
     const list = aiGetProducts('Footwear', gender);
     if (!list.length) return { text: "Hmm, I don't have footwear matching that filter right now. Want me to check other options or connect you with Stacey?", escalate: true };
     return {
@@ -722,6 +1118,16 @@ function handleUserMessage(text) {
 /* ================================================================
    FILTER + SEARCH EVENT LISTENERS
    ================================================================ */
+function renderCategoryTabs() {
+  const tablist = $('category-tablist');
+  if (!tablist) return;
+  const categories = [...new Set(PRODUCTS.map(p => p.category))];
+  tablist.innerHTML = [
+    `<button class="filter-tab active" role="tab" aria-selected="true" data-filter="category" data-value="all">All Items</button>`,
+    ...categories.map(c => `<button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="${c}">${c}</button>`)
+  ].join('');
+}
+
 function initFilters() {
   document.querySelectorAll('.filter-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -783,6 +1189,23 @@ function initQuiz() {
   quizTriggers.forEach(id => $(`${id}`)?.addEventListener('click', openQuiz));
 
   $('close-quiz-modal')?.addEventListener('click', () => $('quiz-modal')?.close());
+  $('quiz-modal')?.addEventListener('close', stopQuizCamera);
+
+  // Selfie session controls
+  $('quiz-cam-start')?.addEventListener('click', startQuizCamera);
+  $('quiz-cam-snap')?.addEventListener('click', snapQuizSelfie);
+  $('quiz-cam-cancel')?.addEventListener('click', resetSelfieUI);
+  $('quiz-cam-skip')?.addEventListener('click', () => { quizSelfie = null; showQuizResults(); });
+  $('quiz-retake-btn')?.addEventListener('click', resetSelfieUI);
+  $('quiz-show-btn')?.addEventListener('click', showQuizResults);
+  $('quiz-selfie-upload')?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setQuizSelfie(reader.result);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
 }
 
 /* ================================================================
@@ -834,6 +1257,8 @@ function initModals() {
    ================================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
   await loadProductsFromApi();
+  renderDeptPage();
+  renderCategoryTabs();
   renderProducts();
   renderCart();
   initFilters();
@@ -841,6 +1266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNavbar();
   initModals();
   initAIChat();
+  observeReveals();
 
   // CSS badge pop animation (inject once)
   const style = document.createElement('style');

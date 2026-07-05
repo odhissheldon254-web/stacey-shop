@@ -1,8 +1,104 @@
 [
   {
     "id": 1,
-    "name": "Health Check",
-    "price": 123,
-    "inStock": true
+    "name": "Neon Pulse Streetwear Sneakers",
+    "category": "Footwear",
+    "gender": "Unisex",
+    "price": 4500,
+    "qty": 8,
+    "image": "assets/product_sneakers.png",
+    "description": "Bold black streetwear sneakers with neon pink highlights.",
+    "tags": [
+      "sneakers",
+      "shoes",
+      "streetwear"
+    ],
+    "inStock": true,
+    "featured": true
+  },
+  {
+    "id": 2,
+    "name": "Luxe Quilted Leather Handbag",
+    "category": "Bags",
+    "gender": "Female",
+    "price": 6800,
+    "qty": 5,
+    "image": "assets/product_handbag.png",
+    "description": "Timeless black quilted leather bag with gold chain strap.",
+    "tags": [
+      "bag",
+      "handbag",
+      "luxury"
+    ],
+    "inStock": true,
+    "featured": true
+  },
+  {
+    "id": 3,
+    "name": "Velvet Drape Evening Gown",
+    "category": "Clothes",
+    "gender": "Female",
+    "price": 8200,
+    "qty": 2,
+    "image": "assets/product_dress.png",
+    "description": "Deep magenta velvet gown with elegant draping.",
+    "tags": [
+      "dress",
+      "gown",
+      "formal"
+    ],
+    "inStock": true,
+    "featured": false
+  },
+  {
+    "id": 4,
+    "name": "Neon Stiletto High Heels",
+    "category": "Footwear",
+    "gender": "Female",
+    "price": 5200,
+    "qty": 6,
+    "image": "assets/product_heels.png",
+    "description": "Hot pink glossy stiletto heels with a sleek metallic base.",
+    "tags": [
+      "heels",
+      "shoes",
+      "pink"
+    ],
+    "inStock": true,
+    "featured": true
+  },
+  {
+    "id": 5,
+    "name": "Little Steps Comfy Sneakers",
+    "category": "Footwear",
+    "gender": "Kids",
+    "price": 2400,
+    "qty": 10,
+    "image": "assets/product_sneakers.png",
+    "description": "Lightweight, easy-strap sneakers for little trendsetters — comfy for school runs and play dates.",
+    "tags": [
+      "kids",
+      "sneakers",
+      "shoes"
+    ],
+    "inStock": true,
+    "featured": false
+  },
+  {
+    "id": 6,
+    "name": "Classic Panama Fedora",
+    "category": "Hats",
+    "gender": "Male",
+    "price": 1800,
+    "qty": 4,
+    "image": "assets/logo.jpeg",
+    "description": "Timeless woven fedora to top off any sharp look.",
+    "tags": [
+      "hat",
+      "fedora",
+      "men"
+    ],
+    "inStock": true,
+    "featured": false
   }
 ]
