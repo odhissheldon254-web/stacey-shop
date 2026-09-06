@@ -50,8 +50,28 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
   '.webp': 'image/webp',
   '.ico': 'image/x-icon',
-  '.txt': 'text/plain; charset=utf-8'
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
+  '.woff2': 'font/woff2'
 };
+
+/* Clean URLs → the file that backs them. Keeps links like /about
+   readable and stable even if the file layout changes later. */
+const PAGE_ROUTES = {
+  '/about': 'about.html',
+  '/contact': 'contact.html',
+  '/delivery': 'delivery.html',
+  '/faq': 'faq.html',
+  '/size-guide': 'size-guide.html'
+};
+
+/* The department template; app.js reads the path to pick the shelves. */
+const DEPARTMENT_ROUTES = ['/women', '/men', '/kids', '/shop'];
+
+/* Long cache for fingerprint-free assets that rarely change, short for
+   markup so Stacey's stock edits show up straight away. */
+const IMMUTABLE_ASSET = /\.(png|jpe?g|gif|svg|webp|ico|woff2)$/i;
 
 const DEFAULT_PRODUCTS = [
   { id: 1, name: 'Neon Pulse Streetwear Sneakers', category: 'Footwear', gender: 'Unisex', price: 4500, qty: 8, image: 'assets/product_sneakers.png', description: 'Bold black streetwear sneakers with neon pink highlights.', tags: ['sneakers', 'shoes', 'streetwear'], inStock: true, featured: true },
@@ -242,34 +262,76 @@ function readBody(req) {
   });
 }
 
-function serveStatic(res, requestPath) {
+const NOT_FOUND_PAGE = '404.html';
+
+/* Set CANONICAL_HOST (e.g. taceycollections.co.ke) in production to fold
+   www onto the apex domain. Unset locally, so nothing redirects in dev. */
+const canonicalHost = (process.env.CANONICAL_HOST || '').trim().toLowerCase();
+
+function securityHeaders() {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), interest-cohort=()'
+  };
+}
+
+function serveStatic(res, requestPath, status = 200) {
   const resolved = path.resolve(__dirname, requestPath);
   const rel = path.relative(__dirname, resolved);
   const blocked =
     rel.startsWith('..') ||
     path.isAbsolute(rel) ||
     rel.split(path.sep).some(part => part.startsWith('.')) ||
-    ['data', 'node_modules', 'tests'].includes(rel.split(path.sep)[0]);
+    ['data', 'node_modules', 'tests', 'partials'].includes(rel.split(path.sep)[0]);
   if (blocked) {
-    sendJson(res, 404, { error: 'Not found' });
+    sendNotFound(res);
     return;
   }
 
   fs.readFile(resolved, (err, content) => {
     if (err) {
-      sendJson(res, 404, { error: 'Not found' });
+      // Missing file → the branded 404 page, but never loop on itself.
+      if (rel === NOT_FOUND_PAGE) {
+        sendJson(res, 404, { error: 'Not found' });
+        return;
+      }
+      sendNotFound(res);
       return;
     }
     const ext = path.extname(resolved).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+    res.writeHead(status, {
+      'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+      'Cache-Control': IMMUTABLE_ASSET.test(resolved)
+        ? 'public, max-age=604800'
+        : 'public, max-age=0, must-revalidate',
+      ...securityHeaders()
+    });
     res.end(content);
   });
+}
+
+function sendNotFound(res) {
+  serveStatic(res, NOT_FOUND_PAGE, 404);
 }
 
 /* ── Server ──────────────────────────────────────────────── */
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+
+  // One canonical host in production: www → apex, single 301.
+  // Skipped locally so localhost and Render's own *.onrender.com keep working.
+  const host = req.headers.host || '';
+  if (canonicalHost && host.toLowerCase() === `www.${canonicalHost}`) {
+    res.writeHead(301, {
+      Location: `https://${canonicalHost}${req.url}`,
+      ...securityHeaders()
+    });
+    res.end();
+    return;
+  }
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -347,9 +409,27 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Department pages share one template; app.js reads the path.
-    if (req.method === 'GET' && ['/women', '/men', '/kids', '/shop'].includes(url.pathname)) {
+    if (req.method === 'GET' && DEPARTMENT_ROUTES.includes(url.pathname)) {
       serveStatic(res, 'shop.html');
       return;
+    }
+
+    // Clean URLs for the static content pages.
+    if ((req.method === 'GET' || req.method === 'HEAD') && PAGE_ROUTES[url.pathname]) {
+      serveStatic(res, PAGE_ROUTES[url.pathname]);
+      return;
+    }
+
+    // Send /about.html style requests to the canonical /about, so the same
+    // page is never indexed under two URLs.
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      const canonical = Object.entries(PAGE_ROUTES)
+        .find(([, file]) => url.pathname === `/${file}`);
+      if (canonical) {
+        res.writeHead(301, { Location: canonical[0], ...securityHeaders() });
+        res.end();
+        return;
+      }
     }
 
     if (req.method === 'GET' || req.method === 'HEAD') {
@@ -358,7 +438,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    sendJson(res, 404, { error: 'Not found' });
+    sendNotFound(res);
   } catch (error) {
     console.error('Request failed:', error);
     sendJson(res, 500, { error: 'Internal server error' });

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Stacey's private stock panel — never index it.
+Disallow: /admin.html
+Disallow: /stock-admin.html
+Disallow: /api/
+
+Sitemap: https://taceycollections.co.ke/sitemap.xml

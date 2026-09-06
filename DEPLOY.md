@@ -1,11 +1,20 @@
 # Deploying Tacey Collections — free, online, and permanent
 
 The shop is one small Node server (no npm dependencies) that serves the
-storefront, the admin panel, and the products API.
+storefront, the content pages, the admin panel, and the products API.
 
 - **Storefront:** `/` (index.html)
+- **Departments:** `/women`, `/men`, `/kids`, `/shop` (all shop.html; app.js
+  reads the path and sets the right shelves, title and canonical URL)
+- **Content pages:** `/about`, `/delivery`, `/size-guide`, `/faq`, `/contact`
 - **Stacey's admin:** `/admin.html` (password-protected, saves to the server)
 - **API:** `/api/products` (public read), `PUT` requires login
+- **SEO:** `/robots.txt`, `/sitemap.xml`, `/site.webmanifest`
+
+## Custom domain
+
+The site is built for **taceycollections.co.ke**. Registering it and pointing
+DNS at Render is a separate walkthrough — see **[DOMAIN.md](DOMAIN.md)**.
 
 ## 1. Host the site on Render (free)
 
@@ -53,7 +62,8 @@ Stacey's stock edits eventually reset. Supabase's free tier fixes that.
 
 Send her two things:
 
-- the admin link: `https://YOUR-SITE.onrender.com/admin.html`
+- the admin link: `https://taceycollections.co.ke/admin.html`
+  (or `https://YOUR-SITE.onrender.com/admin.html` before the domain is live)
 - the `ADMIN_PASSWORD` you chose
 
 She logs in, flips the **In Stock / Out of Stock** switch on any product, and
@@ -65,8 +75,24 @@ sessions expire after 12 hours anyway.
 
 ```bash
 npm start          # http://localhost:3000
-npm test           # API + auth tests
+npm test           # API, auth, routing, SEO and internal-link tests
+npm run build      # re-sync the shared header/footer into every page
 ```
+
+### Editing the shared header and footer
+
+The footer, the content-page header and the common `<head>` tags live once in
+`partials/` and are stitched into every page between marker comments:
+
+```html
+<!-- @partial:footer -->
+   ...generated, do not hand-edit...
+<!-- /@partial:footer -->
+```
+
+Edit the file in `partials/`, run `npm run build`, and commit the result. A
+test fails if any page has drifted out of sync, so this cannot be forgotten
+silently.
 
 If `ADMIN_PASSWORD` isn't set, the server prints a one-time password in the
 terminal at startup so you can still log in during development.

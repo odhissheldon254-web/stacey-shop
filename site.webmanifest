@@ -1,0 +1,16 @@
+{
+  "name": "Tacey Collections",
+  "short_name": "Tacey",
+  "description": "Curated footwear, bags and clothing in Kenya. Style that speaks for you.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#170d13",
+  "theme_color": "#0b0b12",
+  "lang": "en-KE",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    { "src": "/assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/assets/logo.jpeg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any" }
+  ]
+}

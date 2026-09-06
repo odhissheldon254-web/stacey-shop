@@ -28,6 +28,8 @@ async function loadProductsFromApi() {
     gender: "Unisex",
     price: 4500,
     image: "assets/product_sneakers.png",
+    images: ["assets/product_sneakers.png"],
+    sizes: ["38","39","40","41","42","43","44"],
     description: "Bold black streetwear sneakers with neon pink highlights. Lightweight sole, premium grip, and limited colorway. Perfect for street style outings.",
     tags: ["sneakers","shoes","streetwear","neon","unisex","casual"],
     inStock: true,
@@ -40,6 +42,8 @@ async function loadProductsFromApi() {
     gender: "Female",
     price: 6800,
     image: "assets/product_handbag.png",
+    images: ["assets/product_handbag.png"],
+    sizes: [],
     description: "Timeless black quilted leather bag with gold chain strap. Spacious interior with suede lining. The must-have for any elevated wardrobe.",
     tags: ["bag","handbag","leather","luxury","quilted","gold","chain"],
     inStock: true,
@@ -52,6 +56,8 @@ async function loadProductsFromApi() {
     gender: "Female",
     price: 8200,
     image: "assets/product_dress.png",
+    images: ["assets/product_dress.png"],
+    sizes: ["XS","S","M","L","XL"],
     description: "Deep magenta velvet gown with elegant draping and a daring slit. Hand-stitched finishing. Perfect for galas, formal dinners, and weddings.",
     tags: ["dress","gown","evening","formal","velvet","gala","magenta"],
     inStock: true,
@@ -64,6 +70,8 @@ async function loadProductsFromApi() {
     gender: "Female",
     price: 5200,
     image: "assets/product_heels.png",
+    images: ["assets/product_heels.png"],
+    sizes: ["36","37","38","39","40","41"],
     description: "Hot pink glossy stiletto heels with a sleek metallic base. Padded insole for all-night comfort. Designed to steal every spotlight.",
     tags: ["heels","stiletto","shoes","pink","neon","glam","night out"],
     inStock: true,
@@ -92,6 +100,7 @@ const DELIVERY_FEES = {
    STATE
    ================================================================ */
 let cart = JSON.parse(localStorage.getItem('tacey_cart') || '[]');
+let wishlist = JSON.parse(localStorage.getItem('tacey_wishlist') || '[]');
 let activeFilters = { category: 'all', gender: 'all', search: '' };
 let quizAnswers = {};
 let currentQuizStep = 1;
@@ -200,16 +209,24 @@ function getFilteredProducts() {
   });
 }
 
+function isWishlisted(id) {
+  return wishlist.includes(id);
+}
+
 function productCardHTML(p) {
+  const wishlisted = isWishlisted(p.id);
   return `
     <article class="product-card" data-id="${p.id}" tabindex="0" role="button"
              aria-label="View details for ${p.name}" style="${!p.inStock ? 'opacity:0.5;' : ''}">
       <div class="product-img-container">
         <img src="${p.image}" alt="${p.name}" class="product-img" loading="lazy">
         <span class="product-badge">${p.gender}</span>
-        ${p.featured ? `<span class="product-badge" style="left:auto;right:0.75rem;color:var(--color-primary);border-color:var(--color-primary-glow);">★ Featured</span>` : ''}
+        ${p.featured ? `<span class="product-badge" style="left:auto;right:2.75rem;color:var(--color-primary);border-color:var(--color-primary-glow);">★ Featured</span>` : ''}
         ${!p.inStock ? `<span class="product-badge" style="top:auto;bottom:0.75rem;left:0.75rem;color:var(--color-error);">Out of Stock</span>` : ''}
         ${p.inStock && p.qty <= 3 ? `<span class="product-badge low-stock-badge" style="top:auto;bottom:0.75rem;left:0.75rem;">🔥 Only ${p.qty} left</span>` : ''}
+        <button class="wishlist-btn ${wishlisted ? 'wishlisted' : ''}" data-id="${p.id}" aria-label="${wishlisted ? 'Remove from' : 'Add to'} wishlist" aria-pressed="${wishlisted}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="${wishlisted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
       </div>
       <div class="product-info">
         <span class="product-cat">${p.category}</span>
@@ -229,6 +246,7 @@ function bindProductCardEvents(root) {
   root.querySelectorAll('.product-card').forEach(card => {
     card.addEventListener('click', e => {
       if (e.target.closest('.product-card-btn')) return;
+      if (e.target.closest('.wishlist-btn')) return;
       openDetailModal(+card.dataset.id);
     });
     card.addEventListener('keydown', e => {
@@ -240,6 +258,13 @@ function bindProductCardEvents(root) {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       addToCart(+btn.dataset.id);
+    });
+  });
+
+  root.querySelectorAll('.wishlist-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleWishlist(+btn.dataset.id);
     });
   });
 }
@@ -265,6 +290,60 @@ function renderProducts(list = getFilteredProducts()) {
 /* ================================================================
    DEPARTMENT PAGE — hero + horizontal shelves
    ================================================================ */
+const SITE_ORIGIN = 'https://taceycollections.co.ke';
+
+/* The three departments share one HTML file, so the per-department canonical
+   URL, description and breadcrumb trail have to be set once we know which
+   department this is. Without this all three would look like /shop to a
+   crawler and compete with each other. */
+function setDeptSeo(deptKey, dept) {
+  const url = `${SITE_ORIGIN}/${deptKey}`;
+
+  // shop.html ships with each of these tags, so this updates in place;
+  // the create path only matters if the markup is ever trimmed.
+  const setMeta = (attrName, attrValue, content) => {
+    let el = document.head.querySelector(`meta[${attrName}="${attrValue}"]`);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attrName, attrValue);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  };
+
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    document.head.appendChild(canonical);
+  }
+  canonical.setAttribute('href', url);
+
+  const description = `Shop the ${dept.title} at Tacey Collections. ${dept.tagline} Order on WhatsApp and pay by M-Pesa after Stacey confirms.`;
+  setMeta('name', 'description', description);
+  setMeta('property', 'og:title', `${dept.title} | Tacey Collections`);
+  setMeta('property', 'og:description', description);
+  setMeta('property', 'og:url', url);
+
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: dept.crumb, item: url }
+    ]
+  };
+
+  let ld = document.getElementById('dept-breadcrumb-ld');
+  if (!ld) {
+    ld = document.createElement('script');
+    ld.type = 'application/ld+json';
+    ld.id = 'dept-breadcrumb-ld';
+    document.head.appendChild(ld);
+  }
+  ld.textContent = JSON.stringify(breadcrumb);
+}
+
 function renderDeptPage() {
   const deptKey = currentDeptKey();
   const container = $('shelves-container');
@@ -272,6 +351,7 @@ function renderDeptPage() {
 
   const dept = DEPARTMENTS[deptKey];
   document.title = `${dept.crumb} | Tacey Collections`;
+  setDeptSeo(deptKey, dept);
 
   // Hero
   const crumb = $('dept-crumb');   if (crumb)   crumb.textContent = dept.crumb;
@@ -360,10 +440,35 @@ function openDetailModal(id) {
   if (!p) return;
   const modal = $('product-detail-modal');
   const container = $('modal-content-container');
+  const images = (p.images && p.images.length) ? p.images : [p.image];
+  const sizes = p.sizes || [];
+  const wishlisted = isWishlisted(id);
+
+  let selectedSize = null;
+
+  const galHTML = images.length > 1 ? `
+    <div class="gallery-thumbnails" id="modal-gallery-thumbs">
+      ${images.map((src, i) => `
+        <button class="gallery-thumb ${i === 0 ? 'active' : ''}" data-idx="${i}" aria-label="View image ${i + 1}">
+          <img src="${src}" alt="${p.name} view ${i + 1}" loading="lazy">
+        </button>`).join('')}
+    </div>` : '';
+
+  const sizeHTML = sizes.length ? `
+    <div class="size-picker-group">
+      <span class="size-picker-label">Select Size</span>
+      <div class="size-chips" id="modal-size-chips">
+        ${sizes.map(s => `<button class="size-chip" data-size="${s}">${s}</button>`).join('')}
+      </div>
+      <p class="size-required-note" id="size-required-note">Please select a size to continue.</p>
+    </div>` : '';
 
   container.innerHTML = `
-    <div class="details-img-wrap">
-      <img src="${p.image}" alt="${p.name}" class="details-img">
+    <div class="details-gallery">
+      <div class="details-main-img-wrap">
+        <img src="${images[0]}" alt="${p.name}" class="details-main-img" id="modal-main-img">
+      </div>
+      ${galHTML}
     </div>
     <div class="details-content">
       <span class="product-cat">${p.category} · ${p.gender}</span>
@@ -375,9 +480,14 @@ function openDetailModal(id) {
           : `✔ In stock — ${p.qty} pieces available`}
       </p>
       <p class="details-desc">${p.description}</p>
+      ${sizeHTML}
       <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:auto;">
         <button class="btn btn-primary" id="modal-add-cart-btn" ${!p.inStock ? 'disabled' : ''}>
           ${p.inStock ? '🛒 Add to Cart' : 'Sold Out'}
+        </button>
+        <button class="modal-wishlist-btn ${wishlisted ? 'wishlisted' : ''}" id="modal-wishlist-btn"
+                aria-label="${wishlisted ? 'Remove from' : 'Save to'} wishlist" aria-pressed="${wishlisted}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="${wishlisted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </button>
         <a href="https://wa.me/254702179011?text=${encodeURIComponent(`Hi Stacey! I'm interested in: *${p.name}* at KES ${p.price.toLocaleString('en-KE')}. Is it available?`)}"
            class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer">
@@ -386,9 +496,49 @@ function openDetailModal(id) {
       </div>
     </div>`;
 
+  // Gallery thumbnail switching
+  document.getElementById('modal-gallery-thumbs')?.addEventListener('click', e => {
+    const thumb = e.target.closest('.gallery-thumb');
+    if (!thumb) return;
+    const idx = +thumb.dataset.idx;
+    const mainImg = $('modal-main-img');
+    document.querySelectorAll('#modal-gallery-thumbs .gallery-thumb').forEach(t => t.classList.remove('active'));
+    thumb.classList.add('active');
+    mainImg.classList.add('fade-out');
+    setTimeout(() => {
+      mainImg.src = images[idx];
+      mainImg.classList.remove('fade-out');
+    }, 220);
+  });
+
+  // Size chip selection
+  document.getElementById('modal-size-chips')?.addEventListener('click', e => {
+    const chip = e.target.closest('.size-chip');
+    if (!chip) return;
+    document.querySelectorAll('#modal-size-chips .size-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    selectedSize = chip.dataset.size;
+    $('size-required-note')?.classList.remove('visible');
+  });
+
+  // Add to cart (with size check)
   $('modal-add-cart-btn')?.addEventListener('click', () => {
-    addToCart(id);
+    if (sizes.length && !selectedSize) {
+      $('size-required-note')?.classList.add('visible');
+      return;
+    }
+    addToCart(id, selectedSize);
     modal.close();
+  });
+
+  // Wishlist toggle in modal
+  $('modal-wishlist-btn')?.addEventListener('click', () => {
+    toggleWishlist(id);
+    const btn = $('modal-wishlist-btn');
+    const wl = isWishlisted(id);
+    btn.classList.toggle('wishlisted', wl);
+    btn.setAttribute('aria-pressed', String(wl));
+    btn.querySelector('svg').setAttribute('fill', wl ? 'currentColor' : 'none');
   });
 
   modal.showModal();
@@ -401,33 +551,35 @@ function saveCart() {
   localStorage.setItem('tacey_cart', JSON.stringify(cart));
 }
 
-function addToCart(id) {
+function addToCart(id, size = null) {
   const p = PRODUCTS.find(x => x.id === id);
   if (!p || !p.inStock) return;
-  const existing = cart.find(i => i.id === id);
+  // Match by id + size combo
+  const key = size ? `${id}__${size}` : String(id);
+  const existing = cart.find(i => i.key === key);
   const inBag = existing ? existing.qty : 0;
   if (inBag >= p.qty) {
     shopToast(`Only ${p.qty} piece${p.qty !== 1 ? 's' : ''} of "${p.name}" available — all in your bag already!`);
     return;
   }
   if (existing) { existing.qty += 1; }
-  else { cart.push({ id, qty: 1 }); }
+  else { cart.push({ key, id, qty: 1, size }); }
   saveCart();
   renderCart();
   flashCartBadge();
-  shopToast(`✓ "${p.name}" added to your bag`);
+  shopToast(`✓ "${p.name}"${size ? ` (${size})` : ''} added to your bag`);
 }
 
-function removeFromCart(id) {
-  cart = cart.filter(i => i.id !== id);
+function removeFromCart(key) {
+  cart = cart.filter(i => (i.key || String(i.id)) !== key);
   saveCart();
   renderCart();
 }
 
-function changeQty(id, delta) {
-  const item = cart.find(i => i.id === id);
+function changeQty(key, delta) {
+  const item = cart.find(i => (i.key || String(i.id)) === key);
   if (!item) return;
-  const p = PRODUCTS.find(x => x.id === id);
+  const p = PRODUCTS.find(x => x.id === item.id);
   const max = p ? Math.max(1, p.qty) : Infinity;
   const wanted = item.qty + delta;
   if (wanted > max) {
@@ -484,21 +636,23 @@ function renderCart() {
     if (!p) return '';
     const lineTotal = p.price * item.qty;
     subtotal += lineTotal;
+    const itemKey = item.key || String(item.id);
+    const escKey = itemKey.replace(/"/g, '&quot;');
     return `
       <div class="cart-item" style="display:flex;gap:0.85rem;align-items:center;padding:0.85rem 0;border-bottom:1px solid var(--color-border);">
         <img src="${p.image}" alt="${p.name}" style="width:54px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0;">
         <div style="flex:1;min-width:0;">
           <p style="font-weight:600;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</p>
-          <p style="font-size:0.8rem;color:var(--color-text-muted);">${fmt(p.price)} each</p>
+          <p style="font-size:0.8rem;color:var(--color-text-muted);">${item.size ? `Size: <strong>${item.size}</strong> · ` : ''}${fmt(p.price)} each</p>
           <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem;">
-            <button onclick="changeQty(${p.id},-1)" style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Decrease quantity">−</button>
+            <button onclick="changeQty('${escKey}',-1)" style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Decrease quantity">−</button>
             <span style="font-size:0.9rem;font-weight:600;min-width:20px;text-align:center;">${item.qty}</span>
-            <button onclick="changeQty(${p.id},1)"  style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Increase quantity">+</button>
+            <button onclick="changeQty('${escKey}',1)"  style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Increase quantity">+</button>
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <p style="font-weight:700;color:var(--color-accent);font-size:0.9rem;">${fmt(lineTotal)}</p>
-          <button onclick="removeFromCart(${p.id})" style="font-size:0.75rem;color:var(--color-error);margin-top:0.25rem;" aria-label="Remove ${p.name}">Remove</button>
+          <button onclick="removeFromCart('${escKey}')" style="font-size:0.75rem;color:var(--color-error);margin-top:0.25rem;" aria-label="Remove ${p.name}">Remove</button>
         </div>
       </div>`;
   }).join('');
@@ -515,7 +669,8 @@ function buildWhatsAppMessage() {
   if (!cart.length) return '';
   const lines = cart.map(item => {
     const p = PRODUCTS.find(x => x.id === item.id);
-    return `• ${p.name} x${item.qty} = ${fmt(p.price * item.qty)}`;
+    const sizeStr = item.size ? ` (Size: ${item.size})` : '';
+    return `• ${p.name}${sizeStr} x${item.qty} = ${fmt(p.price * item.qty)}`;
   });
   const subtotal = cart.reduce((s, i) => {
     const p = PRODUCTS.find(x => x.id === i.id);
@@ -1116,6 +1271,205 @@ function handleUserMessage(text) {
 }
 
 /* ================================================================
+   WISHLIST
+   ================================================================ */
+function saveWishlist() {
+  localStorage.setItem('tacey_wishlist', JSON.stringify(wishlist));
+}
+
+function toggleWishlist(id) {
+  const idx = wishlist.indexOf(id);
+  if (idx === -1) {
+    wishlist.push(id);
+    const p = PRODUCTS.find(x => x.id === id);
+    shopToast(`💜 "${p?.name || 'Item'}" saved to wishlist`);
+  } else {
+    wishlist.splice(idx, 1);
+    shopToast('Removed from wishlist');
+  }
+  saveWishlist();
+  renderWishlistBadge();
+  // Re-render product cards so heart state updates
+  renderProducts();
+}
+
+function renderWishlistBadge() {
+  const badge = $('wishlist-count');
+  if (!badge) return;
+  const count = wishlist.length;
+  badge.textContent = count;
+  badge.classList.toggle('visible', count > 0);
+}
+
+function renderWishlistDrawer() {
+  const container = $('wishlist-items-container');
+  if (!container) return;
+
+  if (!wishlist.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:3rem 1rem;color:var(--color-text-muted);">
+        <p style="font-size:2rem;margin-bottom:0.5rem;">💜</p>
+        <p>No saved items yet.<br>Tap the heart on any product!</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = wishlist.map(id => {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) return '';
+    return `
+      <div class="wishlist-item">
+        <img src="${p.image}" alt="${p.name}" class="wishlist-item-img">
+        <div class="wishlist-item-info">
+          <p class="wishlist-item-name">${p.name}</p>
+          <p class="wishlist-item-price">KES ${p.price.toLocaleString('en-KE')}</p>
+        </div>
+        <div class="wishlist-item-actions">
+          <button class="wishlist-add-btn" onclick="addToCart(${id});shopToast('Added to cart!')"
+                  ${!p.inStock ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+            ${p.inStock ? '+ Add' : 'Out of Stock'}
+          </button>
+          <button class="wishlist-remove-btn" onclick="toggleWishlist(${id});renderWishlistDrawer()">Remove</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openWishlist() {
+  const drawer = $('wishlist-drawer');
+  renderWishlistDrawer();
+  if (drawer && !drawer.open) {
+    drawer.showModal();
+    $('wishlist-toggle-btn')?.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function closeWishlist() {
+  const drawer = $('wishlist-drawer');
+  if (drawer?.open) {
+    drawer.close();
+    $('wishlist-toggle-btn')?.setAttribute('aria-expanded', 'false');
+  }
+}
+
+/* ================================================================
+   TESTIMONIALS
+   ================================================================ */
+const TESTIMONIALS = [
+  {
+    name: 'Amina W.',
+    location: 'Nairobi, Westlands',
+    avatar: '👩🏾',
+    rating: 5,
+    text: 'Ordered the Luxe Quilted Handbag and it arrived looking even better than the photos. Stacey was so helpful with sizing and delivery. Absolutely love it!'
+  },
+  {
+    name: 'Kevin O.',
+    location: 'Mombasa',
+    avatar: '👨🏿',
+    rating: 5,
+    text: 'Got the Neon Pulse sneakers — clean design, premium quality. Shipped fast via G4S and Stacey kept me updated the whole time. 10/10 experience!'
+  },
+  {
+    name: 'Cynthia M.',
+    location: 'Nairobi, Kilimani',
+    avatar: '👩🏽',
+    rating: 5,
+    text: 'Wore the Velvet Gown to a gala and I was getting compliments all night. The quality is unreal for the price. Stacey is a gem — quick replies, honest advice!'
+  },
+  {
+    name: 'Brian K.',
+    location: 'Thika',
+    avatar: '👨🏾',
+    rating: 4,
+    text: 'Great shopping experience — easy WhatsApp ordering, M-Pesa payment was smooth. Delivery to Thika took 2 days. Will definitely shop again!'
+  }
+];
+
+function starsHTML(n) {
+  return Array.from({ length: 5 }, (_, i) =>
+    `<span class="star${i < n ? '' : ' empty'}">★</span>`).join('');
+}
+
+function renderTestimonials() {
+  const grid = $('testimonials-grid');
+  if (!grid) return;
+  grid.innerHTML = TESTIMONIALS.map(t => `
+    <article class="testimonial-card reveal">
+      <div class="star-rating">${starsHTML(t.rating)}</div>
+      <p class="testimonial-text">${t.text}</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" aria-hidden="true">${t.avatar}</div>
+        <div>
+          <p class="testimonial-name">${t.name}</p>
+          <p class="testimonial-location">📍 ${t.location}</p>
+        </div>
+        <span class="testimonial-verified">✔ Verified</span>
+      </div>
+    </article>`).join('');
+  observeReveals(grid);
+}
+
+/* ================================================================
+   MOBILE NAV
+   ================================================================ */
+function initMobileNav() {
+  const menuBtn   = $('mobile-menu-btn');
+  const drawer    = $('nav-drawer');
+  const backdrop  = $('nav-drawer-backdrop');
+  const closeBtn  = $('nav-drawer-close');
+
+  if (!menuBtn || !drawer) return;
+
+  function openNav() {
+    drawer.classList.add('open');
+    backdrop?.classList.add('open');
+    menuBtn.classList.add('open');
+    menuBtn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    closeBtn?.focus();
+  }
+
+  function closeNav() {
+    drawer.classList.remove('open');
+    backdrop?.classList.remove('open');
+    menuBtn.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    menuBtn.focus();
+  }
+
+  menuBtn.addEventListener('click', () => {
+    drawer.classList.contains('open') ? closeNav() : openNav();
+  });
+
+  backdrop?.addEventListener('click', closeNav);
+  closeBtn?.addEventListener('click', closeNav);
+
+  // Close on nav link click
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeNav));
+
+  // Quiz trigger inside drawer
+  $('nav-drawer-quiz-btn')?.addEventListener('click', () => { closeNav(); openQuiz(); });
+  $('nav-drawer-how')?.addEventListener('click', closeNav);
+
+  // Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) closeNav();
+  });
+
+  // Focus trap inside drawer
+  drawer.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const focusable = drawer.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last  = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
+/* ================================================================
    FILTER + SEARCH EVENT LISTENERS
    ================================================================ */
 function renderCategoryTabs() {
@@ -1255,16 +1609,53 @@ function initModals() {
 /* ================================================================
    BOOT
    ================================================================ */
+/* ================================================================
+   WISHLIST INIT
+   ================================================================ */
+function initWishlist() {
+  $('wishlist-toggle-btn')?.addEventListener('click', openWishlist);
+  $('close-wishlist-btn')?.addEventListener('click', closeWishlist);
+
+  $('wishlist-drawer')?.addEventListener('click', e => {
+    if (e.target === $('wishlist-drawer')) closeWishlist();
+  });
+
+  $('wishlist-drawer')?.addEventListener('close', () => {
+    $('wishlist-toggle-btn')?.setAttribute('aria-expanded', 'false');
+  });
+
+  $('wishlist-add-all-btn')?.addEventListener('click', () => {
+    if (!wishlist.length) return;
+    wishlist.forEach(id => addToCart(id));
+    closeWishlist();
+    openCart();
+  });
+
+  $('wishlist-clear-btn')?.addEventListener('click', () => {
+    wishlist = [];
+    saveWishlist();
+    renderWishlistBadge();
+    renderWishlistDrawer();
+    renderProducts();
+    shopToast('Wishlist cleared');
+  });
+
+  renderWishlistBadge();
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   await loadProductsFromApi();
   renderDeptPage();
   renderCategoryTabs();
   renderProducts();
   renderCart();
+  renderTestimonials();
   initFilters();
   initQuiz();
   initNavbar();
+  initMobileNav();
   initModals();
+  initWishlist();
   initAIChat();
   observeReveals();
 
