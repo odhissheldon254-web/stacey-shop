@@ -176,11 +176,47 @@ test('data files are not served to the public', async () => {
   await startServer();
   const baseUrl = `http://127.0.0.1:${serverPort}`;
   try {
-    for (const blockedPath of ['/data/products.json', '/data/products.test.json', '/.gitignore']) {
+    for (const blockedPath of [
+      '/data/products.json', '/data/products.test.json', '/.gitignore',
+      '/server.js', '/package.json', '/build-partials.js',
+      '/DEPLOY.md', '/render.yaml', '/start_server.sh', '/tests/products-api.test.js'
+    ]) {
       const response = await fetch(`${baseUrl}${blockedPath}`);
       assert.equal(response.status, 404, `${blockedPath} should be blocked`);
     }
   } finally {
     stopServer();
+  }
+});
+
+test('faking X-Forwarded-For does not bypass the login rate limit', async () => {
+  await startServer();
+  const baseUrl = `http://127.0.0.1:${serverPort}`;
+  try {
+    let last;
+    for (let i = 0; i < 11; i += 1) {
+      last = await fetch(`${baseUrl}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': `10.0.0.${i}, 203.0.113.7` },
+        body: JSON.stringify({ password: `wrong-${i}` })
+      });
+    }
+    assert.equal(last.status, 429, 'rotating the spoofable leftmost hop must not reset the limit');
+  } finally {
+    stopServer();
+  }
+});
+
+test('production refuses to start without a strong admin password', async () => {
+  for (const password of ['', '2265']) {
+    const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
+      env: { ...process.env, NODE_ENV: 'production', PORT: '0', ADMIN_PASSWORD: password, SUPABASE_URL: '', SUPABASE_SERVICE_KEY: '' },
+      stdio: 'ignore'
+    });
+    const code = await new Promise(resolve => {
+      const timer = setTimeout(() => { child.kill('SIGTERM'); resolve('still running'); }, 3000);
+      child.on('exit', c => { clearTimeout(timer); resolve(c); });
+    });
+    assert.equal(code, 1, `password "${password}" should be rejected in production`);
   }
 });

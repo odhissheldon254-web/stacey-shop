@@ -30,9 +30,19 @@ const MAX_BODY_BYTES = 20 * 1024 * 1024; // product images may be inlined as dat
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 10;
 
-const adminPassword = process.env.ADMIN_PASSWORD || '2265';
-if (!process.env.ADMIN_PASSWORD) {
-  console.warn('ADMIN_PASSWORD not set — using the default passcode. Set the env var in production.');
+/* The repo is public, so there is no built-in default passcode: anything
+   written here would be readable by everyone. Production refuses to start
+   without a strong ADMIN_PASSWORD; local dev gets a one-time random one. */
+const isProduction = process.env.NODE_ENV === 'production';
+const MIN_PASSWORD_LENGTH = 10;
+let adminPassword = process.env.ADMIN_PASSWORD || '';
+if (isProduction && adminPassword.length < MIN_PASSWORD_LENGTH) {
+  console.error(`ADMIN_PASSWORD must be set to at least ${MIN_PASSWORD_LENGTH} characters in production. Refusing to start.`);
+  process.exit(1);
+}
+if (!adminPassword) {
+  adminPassword = crypto.randomBytes(6).toString('hex');
+  console.warn(`ADMIN_PASSWORD not set — one-time dev password: ${adminPassword}`);
 }
 
 const sessions = new Map(); // token -> expiry timestamp
@@ -71,6 +81,9 @@ const DEPARTMENT_ROUTES = ['/women', '/men', '/kids', '/shop'];
 
 /* Long cache for fingerprint-free assets that rarely change, short for
    markup so Stacey's stock edits show up straight away. */
+/* Repo files that live next to the site but must never be downloadable. */
+const PRIVATE_FILES = new Set(['server.js', 'build-partials.js', 'package.json', 'package-lock.json']);
+
 const IMMUTABLE_ASSET = /\.(png|jpe?g|gif|svg|webp|ico|woff2)$/i;
 
 const DEFAULT_PRODUCTS = [
@@ -155,9 +168,15 @@ function safeEqual(a, b) {
   return crypto.timingSafeEqual(ha, hb);
 }
 
+/* The leftmost X-Forwarded-For entry is whatever the client typed, so
+   trusting it lets an attacker rotate fake IPs past the rate limit. The
+   rightmost entry is the one appended by the host's own proxy. */
 function clientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
-  if (typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
+  if (typeof fwd === 'string' && fwd.length) {
+    const hops = fwd.split(',').map(s => s.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1];
+  }
   return req.socket.remoteAddress || 'unknown';
 }
 
@@ -284,7 +303,9 @@ function serveStatic(res, requestPath, status = 200) {
     rel.startsWith('..') ||
     path.isAbsolute(rel) ||
     rel.split(path.sep).some(part => part.startsWith('.')) ||
-    ['data', 'node_modules', 'tests', 'partials'].includes(rel.split(path.sep)[0]);
+    ['data', 'node_modules', 'tests', 'partials'].includes(rel.split(path.sep)[0]) ||
+    PRIVATE_FILES.has(rel) ||
+    !MIME_TYPES[path.extname(rel).toLowerCase()];
   if (blocked) {
     sendNotFound(res);
     return;

@@ -11,8 +11,9 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
-      # Stacey's admin login password. Set this in the Render dashboard
-      # and share it only with her.
+      # Stacey's admin login password (10+ characters, or the server
+      # refuses to start). Set it in the Render dashboard, share it only
+      # with her, and never commit it: this repo is public.
       - key: ADMIN_PASSWORD
         sync: false
       # Optional but strongly recommended: free Supabase project so product
@@ -24,6 +25,7 @@ services:
         sync: false
       # Custom domain. With this set, www.taceycollections.co.ke issues a
       # single 301 to the bare domain so Google only ever indexes one host.
-      # Leave it unset until DNS is actually pointing at Render.
+      # Safe to set before the domain exists: it only redirects requests
+      # that arrive on the www host, so *.onrender.com keeps working.
       - key: CANONICAL_HOST
         value: taceycollections.co.ke

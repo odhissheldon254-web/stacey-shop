@@ -22,9 +22,10 @@ DNS at Render is a separate walkthrough — see **[DOMAIN.md](DOMAIN.md)**.
 2. Go to [render.com](https://render.com) → **New → Web Service** → connect the repo.
    Render reads `render.yaml` automatically.
 3. When prompted for environment variables, set:
-   - `ADMIN_PASSWORD` — the passcode Stacey uses to log in at `/admin.html`
-     (currently agreed as `2265`; you can change it any time in the Render
-     dashboard). If unset, the server falls back to `2265` with a warning.
+   - `ADMIN_PASSWORD` — the passcode Stacey uses to log in at `/admin.html`.
+     **At least 10 characters**, or the server refuses to start. This repo is
+     public, so never write the passcode into the code or these docs; set it
+     only here. You can change it any time in the Render dashboard.
    - `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` — see step 2 (you can leave them
      empty at first, but product edits will then be lost whenever Render
      restarts the free service).
