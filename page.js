@@ -71,6 +71,28 @@
     });
   }
 
+  /* ── Live bag count ─────────────────────────────────────────
+     Content pages deliberately skip app.js, so they read the bag straight
+     from storage. The number has to be right or the shopper assumes the
+     info pages dropped their order. Clicking through to /#cart opens the
+     real drawer on the storefront. */
+  const badge = $('cart-count');
+  if (badge) {
+    try {
+      const bag = JSON.parse(localStorage.getItem('tacey_cart') || '[]');
+      const count = bag.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+      badge.textContent = count;
+      const link = $('cart-toggle-link');
+      if (link) {
+        link.setAttribute('aria-label',
+          count ? `View your shopping bag — ${count} item${count === 1 ? '' : 's'}`
+                : 'Your shopping bag is empty');
+      }
+    } catch {
+      badge.textContent = '0';   // corrupt or blocked storage: show a bag, not a crash
+    }
+  }
+
   /* ── Mark the current page in the header ────────────────── */
   const here = document.body.dataset.nav;
   if (here) {

@@ -13,6 +13,23 @@
   <meta name="theme-color" content="#0b0b12">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    /* Scroll-reveal is opt-in, and only when the browser can actually finish
+       the job. Sections start at opacity:0 for the fade-up, so a browser with
+       no IntersectionObserver — or a visitor who asked for reduced motion —
+       must never be handed that stylesheet, or the page renders as a blank
+       gap. The timeout is the same guarantee for a failed app.js: after 3s
+       with nothing revealed, the content is shown regardless. */
+    (function () {
+      var root = document.documentElement;
+      if (!('IntersectionObserver' in window) ||
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      root.classList.add('reveal-enabled');
+      setTimeout(function () {
+        if (!root.dataset.revealReady) root.classList.remove('reveal-enabled');
+      }, 3000);
+    })();
+  </script>
   <!-- /@partial:head-common -->
   <meta property="og:title" content="Tacey Collections | Fashion Boutique in Kenya">
   <meta property="og:description" content="Premium fashion, bags, footwear, and curated style for every occasion. Shop online and chat with Stacey on WhatsApp.">
@@ -92,16 +109,17 @@
 
   <!-- Navigation Bar -->
   <header class="navbar" id="main-nav">
-    <div class="nav-brand">
-      <img src="assets/logo.jpeg" alt="Tacey Collections Logo" class="nav-logo-img">
+    <a class="nav-brand" href="/" style="text-decoration:none;">
+      <img src="/assets/logo.jpeg" alt="Tacey Collections Logo" class="nav-logo-img" width="40" height="40">
       <span class="nav-brand-text">Tacey Collections</span>
-    </div>
+    </a>
     <nav class="nav-links" aria-label="Primary Navigation">
       <a href="/women" class="nav-link">Women</a>
       <a href="/men" class="nav-link">Men</a>
       <a href="/kids" class="nav-link">Kids</a>
-      <a href="#how-it-works" class="nav-link">How It Works</a>
-      <button class="nav-link" id="nav-quiz-trigger">Style Matcher</button>
+      <a href="/delivery" class="nav-link nav-link-info">Delivery</a>
+      <a href="/faq" class="nav-link nav-link-info">FAQs</a>
+      <a href="/contact" class="nav-link nav-link-info">Contact</a>
     </nav>
     <div class="nav-actions">
       <button class="btn btn-secondary nav-quiz-btn" id="header-quiz-btn" aria-label="Start Style Quiz">
@@ -310,7 +328,7 @@
         <article class="step-card">
           <span class="step-number">3</span>
           <h3>Pay via M-Pesa</h3>
-          <p>Pay only after Stacey confirms your order — securely through M-Pesa, with the total agreed upfront.</p>
+          <p>Pay only after Stacey confirms your order, to the Tacey Collections paybill — <a href="/delivery">the numbers are published here</a>, with the total agreed upfront.</p>
         </article>
         <article class="step-card">
           <span class="step-number">4</span>
@@ -717,14 +735,14 @@
     </div>
   </dialog>
 
-  <!-- ===== Tacey AI Floating Chat Widget ===== -->
-  <div id="tacey-ai-widget" aria-label="Tacey AI Stylist Chat">
+  <!-- ===== Quick Answers chat widget ===== -->
+  <div id="tacey-ai-widget" aria-label="Quick answers about stock and delivery">
     <!-- Floating Trigger Bubble -->
-    <button class="ai-bubble-btn" id="ai-bubble-btn" aria-expanded="false" aria-controls="ai-chat-window" aria-label="Chat with Tacey AI Stylist">
+    <button class="ai-bubble-btn" id="ai-bubble-btn" aria-expanded="false" aria-controls="ai-chat-window" aria-label="Open quick answers about stock, prices and delivery">
       <span class="ai-bubble-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </span>
-      <span class="ai-bubble-label">Ask Tacey AI</span>
+      <span class="ai-bubble-label">Quick answers</span>
       <span class="ai-pulse-ring"></span>
     </button>
 
@@ -733,12 +751,12 @@
       <div class="ai-chat-header">
         <div class="ai-chat-header-info">
           <div class="ai-avatar">
-            <img src="assets/logo.jpeg" alt="Tacey AI" class="ai-avatar-img">
+            <img src="assets/logo.jpeg" alt="" class="ai-avatar-img">
             <span class="ai-online-dot" aria-hidden="true"></span>
           </div>
           <div>
-            <h3 class="ai-chat-title" id="ai-chat-heading">Tacey AI Stylist</h3>
-            <span class="ai-chat-subtitle">Instant answers about our catalog &amp; delivery</span>
+            <h3 class="ai-chat-title" id="ai-chat-heading">Quick Answers</h3>
+            <span class="ai-chat-subtitle">Stock, prices and delivery — answered instantly</span>
           </div>
         </div>
         <button class="ai-chat-close" id="ai-chat-close" aria-label="Close chat">

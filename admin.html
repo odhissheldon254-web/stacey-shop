@@ -948,7 +948,16 @@
     }
   };
 
-  /* ── Image helpers ── */
+  /* ── Image helpers ──
+     Uploaded images are inlined into products.json as data URLs, and that
+     JSON is what every shopper downloads from /api/products on page load.
+     An unedited phone photo is 3-5 MB, and base64 adds a third on top — a
+     catalogue of twenty would be ~100 MB per visitor, on Kenyan mobile
+     data. So every upload is resized and re-encoded here, in the browser,
+     before it is ever stored. */
+  const IMAGE_MAX_EDGE = 1200;   // ample for a product card or the detail view
+  const IMAGE_QUALITY  = 0.82;
+
   function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -958,18 +967,61 @@
     });
   }
 
+  /* Returns a resized data URL. JPEG unless the source genuinely uses
+     transparency, in which case PNG is kept so logos do not gain a
+     background. Falls back to the original if anything goes wrong — a
+     failed optimisation must never lose the shopkeeper's photo. */
+  async function compressImage(file) {
+    const original = await readFileAsDataUrl(file);
+    if (file.type === 'image/svg+xml') return original;
+    try {
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error('not decodable'));
+        img.src = original;
+      });
+
+      const scale = Math.min(1, IMAGE_MAX_EDGE / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.max(1, Math.round(img.width  * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      let transparent = false;
+      try {
+        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 3; i < data.length; i += 4) {
+          if (data[i] < 250) { transparent = true; break; }
+        }
+      } catch { transparent = file.type === 'image/png'; }
+
+      const out = transparent
+        ? canvas.toDataURL('image/png')
+        : canvas.toDataURL('image/jpeg', IMAGE_QUALITY);
+      return out.length < original.length ? out : original;
+    } catch {
+      return original;
+    }
+  }
+
+  function dataUrlKb(dataUrl) {
+    return Math.round((dataUrl.length * 3 / 4) / 1024);
+  }
+
   window.handleProductImageUpload = async function(input, productId) {
     const file = input.files?.[0];
     if (!file) return;
     const row = document.querySelector(`.product-row[data-pid="${productId}"]`);
     if (!row) return;
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      const dataUrl = await compressImage(file);
       const imageInput = row.querySelector('[data-field="image"]');
       const preview = row.querySelector('.product-row-img');
       if (imageInput) imageInput.value = dataUrl;
       if (preview) preview.src = dataUrl;
-      showToast('🖼 Image ready — click Save to keep it', 'success');
+      showToast(`🖼 Image ready (${dataUrlKb(dataUrl)} KB) — click Save to keep it`, 'success');
     } catch (error) {
       console.error(error);
       showToast('⚠️ Could not read this image', 'error');
@@ -990,10 +1042,10 @@
     const file = $('new-image-file').files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      const dataUrl = await compressImage(file);
       $('new-image').value = dataUrl;
       $('new-image-preview').src = dataUrl;
-      showToast('🖼 Image selected', 'success');
+      showToast(`🖼 Image selected (${dataUrlKb(dataUrl)} KB)`, 'success');
     } catch (error) {
       console.error(error);
       showToast('⚠️ Could not read the selected image', 'error');

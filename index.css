@@ -107,7 +107,11 @@
     display: flex;
     flex-direction: column;
     background-image:
-      url('https://grainy-gradients.vercel.app/noise.svg'),
+      /* Film grain, inlined. This used to point at a stranger's Vercel demo
+         (grainy-gradients.vercel.app), which 404s — so the texture never
+         actually rendered, and every visitor's browser pinged a third party
+         on every page load to find that out. Same effect, no request. */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
       radial-gradient(ellipse 100% 60% at 50% -10%, hsl(338 76% 60% / 0.15) 0%, transparent 65%),
       radial-gradient(circle at 92% 80%, hsl(40 64% 68% / 0.08) 0%, transparent 45%),
       radial-gradient(circle at 6% 96%, hsl(338 76% 50% / 0.07) 0%, transparent 45%);
@@ -708,8 +712,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 1;
+    /* Two lines: most real product names need them, and clamping at one was
+       cutting half the catalogue off mid-word. The min-height keeps the price
+       rows on a shared baseline across the grid. */
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    min-height: 2.6em;
   }
 
   .product-price-row {
@@ -2547,15 +2555,18 @@
   .ticker-track { animation: none; }
 }
 
-/* ===== Scroll reveal ===== */
-.reveal {
+/* ===== Scroll reveal =====
+   Gated on .reveal-enabled (set in the <head> only when the browser can run
+   the observer). Anything not hidden here is simply visible, which is the
+   correct fallback for a shop. */
+.reveal-enabled .reveal {
   opacity: 0;
   transform: translateY(26px);
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: inherit;
 }
 
-.reveal.revealed {
+.reveal-enabled .reveal.revealed {
   opacity: 1;
   transform: translateY(0);
 }
@@ -2613,6 +2624,14 @@
 /* ===== Mobile nav: scrollable department row instead of hiding ===== */
 @media (max-width: 768px) {
   .navbar { flex-wrap: wrap; row-gap: 0.4rem; }
+
+  /* Keep the brand and the actions on one row — at full desktop size they
+     overflow 390px and the actions drop to a row of their own, turning the
+     header into three stacked rows before any content is visible. */
+  .nav-brand-text { font-size: 1.15rem; }
+  .nav-logo-img { height: 34px; width: 34px; }
+  .nav-actions { gap: 0.55rem; }
+  .cart-toggle, .wishlist-nav-btn { padding: 0.4rem; }
   .nav-links {
     display: flex !important;
     order: 3;
@@ -2624,6 +2643,16 @@
   }
   .nav-links::-webkit-scrollbar { display: none; }
   .nav-link { white-space: nowrap; font-size: 0.9rem; }
+
+  /* Only the three departments stay in the mobile strip. With the info
+     pages in there too it ran past the edge and cut off mid-word, which
+     reads as broken rather than scrollable — and every one of them is
+     already a tap away in the drawer. */
+  .nav-link-info { display: none; }
+
+  /* Same reasoning for the Style Matcher button: the hero's "Find My
+     Style" and the drawer both open it, so it only costs header space. */
+  .nav-quiz-btn { display: none; }
 }
 
 /* ===== Style Matcher — selfie session ===== */
@@ -4110,6 +4139,62 @@ dialog#wishlist-drawer[open]::backdrop {
     color: var(--color-accent);
     font-size: 0.8rem;
     top: 0.28em;
+  }
+
+  /* ── M-Pesa paybill card ─────────────────────────────────
+     The numbers themselves live once, in partials/paybill.html, and are
+     stitched into every page that shows them. A paybill that drifts out of
+     sync sends a customer's money somewhere else, so it gets one source. */
+  .paybill-card {
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-primary);
+    border-radius: 12px;
+    background: var(--color-surface);
+    padding: clamp(1.1rem, 3vw, 1.5rem);
+    margin: 1.25rem 0;
+  }
+
+  .paybill-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.9rem;
+  }
+
+  .paybill-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2.5rem;
+  }
+
+  .paybill-row dt {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+  }
+
+  .paybill-row dd {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 4vw, 1.9rem);
+    font-weight: 800;
+    color: var(--color-text);
+    /* Long digit strings are read aloud and typed by hand — keep them
+       unambiguous and easy to select. */
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    user-select: all;
+  }
+
+  .paybill-note {
+    margin-top: 1rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
   }
 
   /* ── Info cards ──────────────────────────────────────────── */

@@ -4,3 +4,20 @@
   <meta name="theme-color" content="#0b0b12">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    /* Scroll-reveal is opt-in, and only when the browser can actually finish
+       the job. Sections start at opacity:0 for the fade-up, so a browser with
+       no IntersectionObserver — or a visitor who asked for reduced motion —
+       must never be handed that stylesheet, or the page renders as a blank
+       gap. The timeout is the same guarantee for a failed app.js: after 3s
+       with nothing revealed, the content is shown regardless. */
+    (function () {
+      var root = document.documentElement;
+      if (!('IntersectionObserver' in window) ||
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      root.classList.add('reveal-enabled');
+      setTimeout(function () {
+        if (!root.dataset.revealReady) root.classList.remove('reveal-enabled');
+      }, 3000);
+    })();
+  </script>

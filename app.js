@@ -1,6 +1,6 @@
 /**
  * Tacey Collections — app.js
- * Handles: Product catalog, Cart + Delivery, Style Matcher Quiz, Tacey AI Chatbot
+ * Handles: Product catalog, Cart + Delivery, Style Matcher Quiz, Quick Answers chat
  */
 
 /* ================================================================
@@ -154,9 +154,14 @@ const revealObserver = ('IntersectionObserver' in window) && !window.matchMedia(
 
 function observeReveals(root = document) {
   if (!revealObserver) return;
-  root.querySelectorAll('.product-card, .step-card, .dept-card, .highlights-card, .instagram-card, .shelf')
+  document.documentElement.dataset.revealReady = '1';
+  // `.reveal` is in the list because some sections carry it straight from the
+  // markup. They still need observing — skipping them was what left the
+  // departments and highlights blocks stuck at opacity:0 forever.
+  root.querySelectorAll('.reveal, .product-card, .step-card, .dept-card, .highlights-card, .instagram-card, .shelf')
     .forEach((el, i) => {
-      if (el.classList.contains('reveal') || el.classList.contains('revealed')) return;
+      if (el.dataset.revealBound || el.classList.contains('revealed')) return;
+      el.dataset.revealBound = '1';
       el.classList.add('reveal');
       el.style.transitionDelay = `${Math.min(i % 6, 5) * 60}ms`;
       revealObserver.observe(el);
@@ -277,7 +282,7 @@ function renderProducts(list = getFilteredProducts()) {
     grid.innerHTML = `
       <div style="grid-column:1/-1; text-align:center; padding:4rem 1rem; color:var(--color-text-muted);">
         <p style="font-size:2rem; margin-bottom:1rem;">🔍</p>
-        <p style="font-size:1.1rem;">No items match your search. Try adjusting the filters or ask <strong>Tacey AI</strong> for help!</p>
+        <p style="font-size:1.1rem;">No items match your search. Try adjusting the filters or ask <strong>Stacey</strong> on WhatsApp — she restocks weekly.</p>
       </div>`;
     return;
   }
@@ -645,14 +650,14 @@ function renderCart() {
           <p style="font-weight:600;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</p>
           <p style="font-size:0.8rem;color:var(--color-text-muted);">${item.size ? `Size: <strong>${item.size}</strong> · ` : ''}${fmt(p.price)} each</p>
           <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem;">
-            <button onclick="changeQty('${escKey}',-1)" style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Decrease quantity">−</button>
+            <button type="button" data-cart-act="dec" data-key="${escKey}" style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Decrease quantity">−</button>
             <span style="font-size:0.9rem;font-weight:600;min-width:20px;text-align:center;">${item.qty}</span>
-            <button onclick="changeQty('${escKey}',1)"  style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Increase quantity">+</button>
+            <button type="button" data-cart-act="inc" data-key="${escKey}"  style="width:26px;height:26px;border:1px solid var(--color-border);border-radius:5px;font-size:1rem;display:grid;place-items:center;color:var(--color-text);" aria-label="Increase quantity">+</button>
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <p style="font-weight:700;color:var(--color-accent);font-size:0.9rem;">${fmt(lineTotal)}</p>
-          <button onclick="removeFromCart('${escKey}')" style="font-size:0.75rem;color:var(--color-error);margin-top:0.25rem;" aria-label="Remove ${p.name}">Remove</button>
+          <button type="button" data-cart-act="remove" data-key="${escKey}" style="font-size:0.75rem;color:var(--color-error);margin-top:0.25rem;" aria-label="Remove ${p.name}">Remove</button>
         </div>
       </div>`;
   }).join('');
@@ -821,7 +826,7 @@ function getQuizMatches() {
 function quizResultRow(p) {
   return `
     <div style="display:flex;gap:1rem;padding:0.85rem;border:1px solid var(--color-border);border-radius:10px;margin-bottom:0.75rem;cursor:pointer;transition:border-color 0.2s;"
-         onclick="$('quiz-modal').close();openDetailModal(${p.id});" onmouseenter="this.style.borderColor='var(--color-primary-glow)'" onmouseleave="this.style.borderColor='var(--color-border)'">
+         data-quiz-pick="${p.id}" onmouseenter="this.style.borderColor='var(--color-primary-glow)'" onmouseleave="this.style.borderColor='var(--color-border)'">
       <img src="${p.image}" alt="${p.name}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0;">
       <div>
         <p style="font-weight:600;font-size:0.95rem;">${p.name}</p>
@@ -856,7 +861,7 @@ function showQuizResults() {
           <p class="show-sub">Styled by Stacey with your perfect matches</p>
           <div class="show-picks">
             ${results.slice(0, 3).map(p => `
-              <button class="show-pick" onclick="$('quiz-modal').close();openDetailModal(${p.id});">
+              <button class="show-pick" type="button" data-quiz-pick="${p.id}">
                 <img src="${p.image}" alt="${p.name}">
                 <span class="show-pick-name">${p.name}</span>
                 <span class="show-pick-price">${fmt(p.price)}</span>
@@ -883,7 +888,7 @@ function showQuizResults() {
     container.innerHTML = `
       <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1rem;color:var(--color-accent);">✨ Perfect picks for you:</h3>
       ${results.map(quizResultRow).join('')}
-      <button class="btn btn-ghost" style="width:100%;margin-top:0.5rem;" onclick="$('quiz-modal').close()">Browse Full Catalog</button>`;
+      <button class="btn btn-ghost" type="button" data-quiz-close style="width:100%;margin-top:0.5rem;">Browse Full Catalog</button>`;
   }
 
   const steps = document.querySelectorAll('.quiz-step');
@@ -980,11 +985,15 @@ async function downloadLookCard(picks) {
    ================================================================ */
 const STACEY_WHATSAPP = 'https://wa.me/254702179011';
 
+/* M-Pesa details. These must match partials/paybill.html — the same numbers
+   are published on /delivery and /faq, and a test fails if they drift. */
+const MPESA = { paybill: '714888', account: '47046' };
+
 const AI_KB = {
   greet: [
-    "Hi there! 👋 I'm Tacey AI, your personal stylist at Tacey Collections. What can I help you find today — shoes, bags, or an outfit? ✨",
-    "Hey! Welcome to Tacey Collections 💅 I know every item in stock. Ask me anything — prices, availability, delivery, or style tips!",
-    "Hello! Looking for something amazing? I'm Tacey AI and I'm here to style you up! What are you shopping for today?"
+    "Hi there! 👋 I can check what's in stock, prices and delivery for you. What are you looking for — shoes, bags, or clothing?",
+    "Hey! Welcome to Tacey Collections 💅 Ask me about prices, what's in stock, or delivery — and I'll put you through to Stacey for anything else.",
+    "Hello! Tell me what you're after and I'll show you what's on the shelves right now. ✨"
   ],
   delivery: `🚚 **Delivery Info**
 
@@ -999,15 +1008,14 @@ We deliver all across Kenya! Here's the fee breakdown:
 
 Just add items to your cart, select your location in the cart drawer, and confirm via WhatsApp. Stacey handles the rest!`,
 
-  hours: `⏰ Stacey is available **every day** from 8AM – 9PM EAT. Tacey AI is here around the clock 24/7 to answer your questions!`,
+  hours: `⏰ Stacey replies on WhatsApp **Monday to Saturday, 9:00am – 7:00pm EAT**. Messages sent outside those hours are answered first thing the next morning — and this chat can check stock, prices and delivery any time.`,
 
   payment: `💳 **Payment Methods**
 
-We accept:
-• **M-Pesa** (most popular!) — Stacey sends the till/number after you confirm your order via WhatsApp
-• **Cash on Pickup** — for self-collection orders
+• **M-Pesa** — Paybill **${MPESA.paybill}**, Account **${MPESA.account}**
+• **Cash on pickup** — for self-collection orders
 
-Your order is confirmed via WhatsApp first, then payment is sorted with Stacey directly.`,
+Send your bag through on WhatsApp first. Stacey confirms the items and the final total including delivery, and only then do you pay — forward her the M-Pesa confirmation message and your order goes out.`,
 
   returns: `🔄 **Returns & Exchanges**
 
@@ -1325,11 +1333,11 @@ function renderWishlistDrawer() {
           <p class="wishlist-item-price">KES ${p.price.toLocaleString('en-KE')}</p>
         </div>
         <div class="wishlist-item-actions">
-          <button class="wishlist-add-btn" onclick="addToCart(${id});shopToast('Added to cart!')"
+          <button class="wishlist-add-btn" type="button" data-wish-act="add" data-id="${id}"
                   ${!p.inStock ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
             ${p.inStock ? '+ Add' : 'Out of Stock'}
           </button>
-          <button class="wishlist-remove-btn" onclick="toggleWishlist(${id});renderWishlistDrawer()">Remove</button>
+          <button class="wishlist-remove-btn" type="button" data-wish-act="remove" data-id="${id}">Remove</button>
         </div>
       </div>`;
   }).join('');
@@ -1355,36 +1363,13 @@ function closeWishlist() {
 /* ================================================================
    TESTIMONIALS
    ================================================================ */
-const TESTIMONIALS = [
-  {
-    name: 'Amina W.',
-    location: 'Nairobi, Westlands',
-    avatar: '👩🏾',
-    rating: 5,
-    text: 'Ordered the Luxe Quilted Handbag and it arrived looking even better than the photos. Stacey was so helpful with sizing and delivery. Absolutely love it!'
-  },
-  {
-    name: 'Kevin O.',
-    location: 'Mombasa',
-    avatar: '👨🏿',
-    rating: 5,
-    text: 'Got the Neon Pulse sneakers — clean design, premium quality. Shipped fast via G4S and Stacey kept me updated the whole time. 10/10 experience!'
-  },
-  {
-    name: 'Cynthia M.',
-    location: 'Nairobi, Kilimani',
-    avatar: '👩🏽',
-    rating: 5,
-    text: 'Wore the Velvet Gown to a gala and I was getting compliments all night. The quality is unreal for the price. Stacey is a gem — quick replies, honest advice!'
-  },
-  {
-    name: 'Brian K.',
-    location: 'Thika',
-    avatar: '👨🏾',
-    rating: 4,
-    text: 'Great shopping experience — easy WhatsApp ordering, M-Pesa payment was smooth. Delivery to Thika took 2 days. Will definitely shop again!'
-  }
-];
+/* Real customer reviews only. Every entry here is published on the site with
+   a name, a town and a star rating attached, so it has to be something a
+   customer actually said — invented ones are false advertising, and shoppers
+   in this market spot them instantly. The section hides itself while this is
+   empty; add entries as Stacey collects them (a WhatsApp screenshot is
+   enough) and it reappears. */
+const TESTIMONIALS = [];
 
 function starsHTML(n) {
   return Array.from({ length: 5 }, (_, i) =>
@@ -1394,6 +1379,12 @@ function starsHTML(n) {
 function renderTestimonials() {
   const grid = $('testimonials-grid');
   if (!grid) return;
+  // No reviews yet — drop the whole section rather than show an empty heading.
+  if (!TESTIMONIALS.length) {
+    document.getElementById('testimonials')?.remove();
+    document.querySelectorAll('a[href="/#testimonials"]').forEach(a => a.closest('li')?.remove());
+    return;
+  }
   grid.innerHTML = TESTIMONIALS.map(t => `
     <article class="testimonial-card reveal">
       <div class="star-rating">${starsHTML(t.rating)}</div>
@@ -1580,6 +1571,40 @@ function initModals() {
   $('cart-toggle-btn')?.addEventListener('click', openCart);
   $('close-cart-btn')?.addEventListener('click', closeCart);
 
+  /* Delegated handlers for markup this file generates.
+     These used to be inline onclick="..." attributes, which silently did
+     nothing: app.js is loaded as type="module", so its functions never
+     reach global scope and every click threw a ReferenceError. Delegation
+     keeps the handlers in scope and survives re-renders. */
+  $('cart-items-container')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-cart-act]');
+    if (!btn) return;
+    const { cartAct, key } = btn.dataset;
+    if (cartAct === 'inc')    changeQty(key, 1);
+    if (cartAct === 'dec')    changeQty(key, -1);
+    if (cartAct === 'remove') removeFromCart(key);
+  });
+
+  $('wishlist-items-container')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-wish-act]');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    if (btn.dataset.wishAct === 'add') {
+      addToCart(id);
+    } else {
+      toggleWishlist(id);
+      renderWishlistDrawer();
+    }
+  });
+
+  $('quiz-results-container')?.addEventListener('click', e => {
+    if (e.target.closest('[data-quiz-close]')) { $('quiz-modal')?.close(); return; }
+    const pick = e.target.closest('[data-quiz-pick]');
+    if (!pick) return;
+    $('quiz-modal')?.close();
+    openDetailModal(Number(pick.dataset.quizPick));
+  });
+
   // Delivery fee live update
   $('delivery-location')?.addEventListener('change', renderCart);
 
@@ -1658,6 +1683,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   initWishlist();
   initAIChat();
   observeReveals();
+
+  // Arriving from an info page's bag icon (/#cart) — open the drawer.
+  if (location.hash === '#cart') {
+    openCart();
+    history.replaceState(null, '', location.pathname);
+  }
 
   // CSS badge pop animation (inject once)
   const style = document.createElement('style');

@@ -223,3 +223,184 @@ test('the shared partials are in sync across all pages', async () => {
     );
   }
 });
+
+test('scroll-reveal can never leave a section permanently invisible', async () => {
+  // A whole section of the homepage once rendered as a blank gap: the markup
+  // carried class="reveal" (opacity:0 until observed), but the observer both
+  // skipped anything already marked and never matched the section's own
+  // selector, so it was never revealed. These three assertions cover each
+  // link in that chain.
+  const css = fs.readFileSync(path.join(ROOT, 'index.css'), 'utf8');
+  const app = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+  const head = fs.readFileSync(path.join(ROOT, 'partials', 'head-common.html'), 'utf8');
+
+  // 1. Hiding is opt-in, so a browser that cannot animate still shows content.
+  assert.match(css, /\.reveal-enabled \.reveal\s*\{/, 'reveal styles must be gated on .reveal-enabled');
+  assert.ok(!/^\.reveal\s*\{/m.test(css), 'an ungated ".reveal { opacity: 0 }" would hide content for good');
+
+  // 2. The gate is withdrawn if the script that reveals never reports in.
+  assert.match(head, /reveal-enabled/, 'the head partial must set the opt-in class');
+  assert.match(head, /revealReady/, 'the head partial needs the failsafe that un-hides on script failure');
+  assert.match(app, /dataset\.revealReady/, 'app.js must report that reveals are running');
+
+  // 3. Sections marked in the markup are observed rather than skipped.
+  const observed = app.match(/root\.querySelectorAll\('([^']*reveal[^']*)'\)/);
+  assert.ok(observed, 'observeReveals should query for .reveal');
+  assert.match(observed[1], /(^|,\s*)\.reveal(,|$)/, '.reveal itself must be in the observed selector list');
+
+  // 4. Nothing in the shipped markup is hidden by a class the observer ignores.
+  for (const file of fs.readdirSync(ROOT).filter(f => f.endsWith('.html'))) {
+    const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
+    if (/class="[^"]*\breveal\b/.test(html)) {
+      assert.match(html, /reveal-enabled/,
+        `${file} hides content with .reveal but never ships the opt-in gate`);
+    }
+  }
+});
+
+test('module scripts never emit inline event handlers', async () => {
+  // app.js ships as <script type="module">, so its top-level functions are
+  // scoped to the module and never reach `window`. Any onclick="foo(...)"
+  // it writes into generated markup therefore throws ReferenceError the
+  // moment a shopper clicks it — this is exactly how the cart's +, - and
+  // Remove buttons, the wishlist buttons and the Style Matcher results all
+  // ended up doing nothing at all. Delegated listeners are the fix.
+  const app = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+
+  for (const page of ['index.html', 'shop.html']) {
+    const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
+    assert.match(html, /<script src="app\.js" type="module">/,
+      `${page} is expected to load app.js as a module`);
+  }
+
+  // `this.style...` is safe (no scope lookup). A bare identifier call is not.
+  const handlers = [...app.matchAll(/\son([a-z]+)="([^"]*)"/g)]
+    .filter(([, , body]) => /(^|[;\s])[A-Za-z_$][\w$]*\s*\(/.test(body.replace(/this\.[\w.]+/g, '')));
+
+  assert.deepEqual(
+    handlers.map(([, evt, body]) => `on${evt}="${body.slice(0, 60)}"`),
+    [],
+    'these inline handlers cannot resolve from module scope — use a delegated listener'
+  );
+});
+
+test('the shopping bag follows the shopper onto the content pages', async () => {
+  await startServer();
+  try {
+    // Content pages skip app.js, so the bag has to be reachable from their
+    // own header — otherwise clicking "Delivery" mid-shop looks like the
+    // order was lost.
+    for (const route of ['/about', '/delivery', '/faq', '/size-guide', '/contact']) {
+      const html = await (await fetch(base() + route)).text();
+      assert.match(html, /id="cart-toggle-link"/, `${route} should show the bag`);
+      assert.match(html, /href="\/#cart"/, `${route}'s bag should link to the drawer`);
+      assert.match(html, /id="cart-count"/, `${route} should show the item count`);
+    }
+
+    // page.js fills that badge from storage, and the storefront opens the
+    // drawer when it is handed the #cart hash.
+    const pageJs = fs.readFileSync(path.join(ROOT, 'page.js'), 'utf8');
+    assert.match(pageJs, /tacey_cart/, 'page.js must read the saved bag');
+    assert.match(pageJs, /cart-count/, 'page.js must fill the badge');
+
+    const app = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+    assert.match(app, /location\.hash === '#cart'/, 'the storefront must honour the #cart handoff');
+  } finally {
+    stopServer();
+  }
+});
+
+test('the site does not depend on third-party asset hosts', async () => {
+  // A texture in body's background pointed at a stranger's Vercel demo. It
+  // 404'd, so the grain never rendered — and every visitor's browser hit
+  // that third party on every page load to find out. Fonts are the one
+  // deliberate exception.
+  const ALLOWED = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+  const files = ['index.css', 'app.js', 'page.js',
+    ...fs.readdirSync(ROOT).filter(f => f.endsWith('.html'))];
+
+  for (const file of files) {
+    const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
+    // url(...) references in CSS, and src/href attributes in markup.
+    const linkTags = [...src.matchAll(/<link\b[^>]*>/g)].map(m => m[0])
+      // canonical/alternate/manifest carry URLs but fetch no third-party asset
+      .filter(tag => /rel="(?:stylesheet|preload|icon|apple-touch-icon)"/.test(tag))
+      .map(tag => tag.match(/href="(https?:\/\/[^"]+)"/)?.[1])
+      .filter(Boolean);
+    const refs = [
+      ...[...src.matchAll(/url\(\s*['"]?(https?:\/\/[^)'"]+)/g)].map(m => m[1]),
+      ...[...src.matchAll(/<(?:img|script)\b[^>]+src="(https?:\/\/[^"]+)"/g)].map(m => m[1]),
+      ...linkTags
+    ];
+    for (const ref of refs) {
+      const host = new URL(ref).hostname;
+      assert.ok(ALLOWED.includes(host),
+        `${file} loads an asset from ${host} — self-host it instead (${ref.slice(0, 70)})`);
+    }
+  }
+});
+
+test('the M-Pesa paybill is published, consistent, and single-sourced', async () => {
+  // Money moves on these two numbers. If one page drifts out of sync with
+  // another — a typo, a half-finished edit — a customer pays a stranger and
+  // it is not recoverable. So: one source (partials/paybill.html), and every
+  // other mention on the site has to agree with it digit for digit.
+  const PAYBILL = '714888';
+  const ACCOUNT = '47046';
+
+  const partial = fs.readFileSync(path.join(ROOT, 'partials', 'paybill.html'), 'utf8');
+  assert.match(partial, new RegExp(`<dd>${PAYBILL}</dd>`), 'the partial must carry the paybill');
+  assert.match(partial, new RegExp(`<dd>${ACCOUNT}</dd>`), 'the partial must carry the account number');
+
+  const app = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+  assert.match(app, new RegExp(`paybill: '${PAYBILL}'`), 'the chat must quote the same paybill');
+  assert.match(app, new RegExp(`account: '${ACCOUNT}'`), 'the chat must quote the same account');
+
+  await startServer();
+  try {
+    // The pages a customer actually reads before paying.
+    for (const route of ['/delivery', '/faq']) {
+      const html = await (await fetch(base() + route)).text();
+      assert.ok(html.includes(PAYBILL), `${route} should publish the paybill`);
+      assert.ok(html.includes(ACCOUNT), `${route} should publish the account number`);
+    }
+
+    // Nothing anywhere may quote a *different* paybill.
+    for (const file of fs.readdirSync(ROOT).filter(f => f.endsWith('.html'))) {
+      const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
+      for (const [, near] of html.matchAll(/[Pp]aybill[^0-9]{0,40}(\d{5,7})/g)) {
+        assert.equal(near, PAYBILL, `${file} quotes paybill ${near}, but the real one is ${PAYBILL}`);
+      }
+      for (const [, near] of html.matchAll(/[Aa]ccount number[^0-9]{0,40}(\d{4,7})/g)) {
+        assert.equal(near, ACCOUNT, `${file} quotes account ${near}, but the real one is ${ACCOUNT}`);
+      }
+    }
+  } finally {
+    stopServer();
+  }
+});
+
+test('admin image uploads are compressed before they are stored', async () => {
+  // Product images are inlined into products.json as data URLs, and that
+  // JSON is what every shopper downloads from /api/products. An unedited
+  // phone photo is 3-5 MB and base64 adds a third; a catalogue of twenty
+  // unresized photos would be ~100 MB per visitor. Verified in a browser:
+  // a 5.7 MB 4032x3024 upload comes out 367 KB at 1200x900.
+  const admin = fs.readFileSync(path.join(ROOT, 'admin.html'), 'utf8');
+
+  assert.match(admin, /async function compressImage\(file\)/, 'the resize helper must exist');
+  assert.match(admin, /IMAGE_MAX_EDGE\s*=\s*(\d+)/, 'a maximum edge length must be set');
+
+  const maxEdge = Number(admin.match(/IMAGE_MAX_EDGE\s*=\s*(\d+)/)[1]);
+  assert.ok(maxEdge > 0 && maxEdge <= 2000,
+    `IMAGE_MAX_EDGE is ${maxEdge}px — large enough to defeat the point of resizing`);
+
+  // Every file-picker handler has to go through it, not straight to the raw read.
+  const handlers = [...admin.matchAll(/(?:handleProductImageUpload[\s\S]{0,700}?|new-image-file'\)\.addEventListener[\s\S]{0,700}?)showToast/g)]
+    .map(m => m[0]);
+  assert.ok(handlers.length >= 2, 'expected both upload paths (existing product, and new product)');
+  for (const handler of handlers) {
+    assert.match(handler, /await compressImage\(file\)/,
+      'an upload path still stores the raw file — it must call compressImage first');
+  }
+});
