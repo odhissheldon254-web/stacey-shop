@@ -1,99 +1,86 @@
-# Deploying Tacey Collections — free, online, and permanent
+# How Tacey Collections runs
 
-The shop is one small Node server (no npm dependencies) that serves the
-storefront, the content pages, the admin panel, and the products API.
+Live at **https://tacey.odhis.co.ke**. No server of our own and nothing to pay
+for except the domain.
 
-- **Storefront:** `/` (index.html)
-- **Departments:** `/women`, `/men`, `/kids`, `/shop` (all shop.html; app.js
-  reads the path and sets the right shelves, title and canonical URL)
-- **Content pages:** `/about`, `/delivery`, `/size-guide`, `/faq`, `/contact`
-- **Stacey's admin:** `/admin.html` (password-protected, saves to the server)
-- **API:** `/api/products` (public read), `PUT` requires login
-- **SEO:** `/robots.txt`, `/sitemap.xml`, `/site.webmanifest`
+| Piece | What it does | Where |
+|---|---|---|
+| **GitHub Pages** | Serves the pages, free, never sleeps | repo `odhissheldon254-web/stacey-shop`, branch `master` |
+| **Supabase** | Stores the catalogue and photos, handles Stacey's login | project `tacey-collections` (org Vintage Tech) |
+| **Truehost** | Owns `odhis.co.ke`; one record points the shop at GitHub | DNS Manager → zone `odhis.co.ke` |
 
-## Custom domain
+- **Storefront:** `/`, departments `/women` `/men` `/kids` `/shop`, content
+  pages `/about` `/delivery` `/size-guide` `/faq` `/contact`
+- **Stacey's admin:** `/admin.html`. She signs in with email + password.
 
-The site is built for **tacey.odhis.co.ke**. Pointing
-its DNS at Render is a separate walkthrough — see **[DOMAIN.md](DOMAIN.md)**.
+## Publishing a change
 
-## 1. Host the site on Render (free)
-
-1. Push this repository to GitHub.
-2. Go to [render.com](https://render.com) → **New → Web Service** → connect the repo.
-   Render reads `render.yaml` automatically.
-3. When prompted for environment variables, set:
-   - `ADMIN_PASSWORD` — the passcode Stacey uses to log in at `/admin.html`.
-     **At least 10 characters**, or the server refuses to start. This repo is
-     public, so never write the passcode into the code or these docs; set it
-     only here. You can change it any time in the Render dashboard.
-   - `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` — see step 2 (you can leave them
-     empty at first, but product edits will then be lost whenever Render
-     restarts the free service).
-4. Deploy. Your shop is live at `https://stacey-shop.onrender.com` (or similar).
-
-> **Free-tier note:** Render free services sleep after ~15 minutes without
-> visitors; the first visit afterwards takes ~30–60 s to wake up. To keep it
-> awake, create a free monitor at [uptimerobot.com](https://uptimerobot.com)
-> that pings `https://YOUR-SITE.onrender.com/api/health` every 5 minutes.
-
-## 2. Make product edits permanent with Supabase (free)
-
-Render's free disk is wiped on every deploy/restart, so without this step
-Stacey's stock edits eventually reset. Supabase's free tier fixes that.
-
-1. Create a free account at [supabase.com](https://supabase.com) → **New project**.
-2. In the project, open **SQL Editor** and run:
-
-   ```sql
-   create table shop_data (
-     key text primary key,
-     value jsonb not null
-   );
-   ```
-
-3. In **Project Settings → API**, copy:
-   - **Project URL** → set as `SUPABASE_URL` on Render
-   - **service_role key** (under "Project API keys") → set as
-     `SUPABASE_SERVICE_KEY` on Render. This key must never appear in the
-     website code — only in Render's environment settings.
-4. Redeploy. `GET /api/health` should now report `"storage": "supabase"`.
-   On first run the server seeds Supabase from `data/products.json`.
-
-## 3. Hand it to Stacey
-
-Send her two things:
-
-- the admin link: `https://tacey.odhis.co.ke/admin.html`
-  (or `https://YOUR-SITE.onrender.com/admin.html` before the domain is live)
-- the `ADMIN_PASSWORD` you chose
-
-She logs in, flips the **In Stock / Out of Stock** switch on any product, and
-the storefront updates instantly for customers. To change the password later,
-edit `ADMIN_PASSWORD` in the Render dashboard (Environment tab) — active
-sessions expire after 12 hours anyway.
+Push to `master`. The **Publish site** workflow (`.github/workflows/pages.yml`)
+runs `npm run build` and `npm test`, and only publishes `_site/` if every test
+passes. A broken build never goes live.
 
 ## Running locally
 
 ```bash
-npm start          # http://localhost:3000
-npm test           # API, auth, routing, SEO and internal-link tests
-npm run build      # re-sync the shared header/footer into every page
+npm run build      # sync shared header/footer, then write _site/
+npm start          # preview _site/ at http://localhost:3000
+npm test           # pages, SEO, links, and the Supabase data layer
 ```
+
+The local preview reads the **real** Supabase catalogue, so signing in to the
+local admin and saving changes the live shop.
 
 ### Editing the shared header and footer
 
 The footer, the content-page header and the common `<head>` tags live once in
-`partials/` and are stitched into every page between marker comments:
+`partials/` and are stitched into every page between marker comments
+(`<!-- @partial:footer -->` … `<!-- /@partial:footer -->`). Edit the file in
+`partials/`, run `npm run build`, and commit. A test fails if any page drifts.
 
-```html
-<!-- @partial:footer -->
-   ...generated, do not hand-edit...
-<!-- /@partial:footer -->
-```
+## Supabase
 
-Edit the file in `partials/`, run `npm run build`, and commit the result. A
-test fails if any page has drifted out of sync, so this cannot be forgotten
-silently.
+`supabase/setup.sql` creates everything: the catalogue table, the security
+rules, the photo bucket and the starting products. It is safe to re-run.
 
-If `ADMIN_PASSWORD` isn't set, the server prints a one-time password in the
-terminal at startup so you can still log in during development.
+The rules, enforced by Supabase itself:
+
+- anyone can **read** the catalogue and view photos
+- only accounts listed in `shop_admins` can **change** the catalogue or
+  upload photos
+- new sign-ups are **off** (Authentication → Sign In / Providers), so nobody
+  can create their own account
+
+`store.js` contains only the **publishable** key, which on its own can only
+read. Never put the secret / `service_role` key in the website; a test fails
+if one appears.
+
+### Adding or changing an admin
+
+1. Supabase → **Authentication → Users → Add user → Create new user**. Enter
+   the email and password, tick **Auto Confirm User**.
+2. **SQL Editor**, run:
+
+   ```sql
+   insert into public.shop_admins (user_id)
+   select id from auth.users where email = 'her-email@example.com'
+   on conflict do nothing;
+   ```
+
+**To change her email later:** Authentication → Users → her account → change
+the email. She stays an admin, because `shop_admins` points at her account,
+not at the address. **To reset her password:** same screen → Send password
+recovery, or set a new one.
+
+## Custom domain
+
+Truehost zone `odhis.co.ke` has one record for the shop:
+
+| Type | Name | Target |
+|---|---|---|
+| CNAME | `tacey` | `odhissheldon254-web.github.io.` |
+
+GitHub (repo → Settings → Pages) has `tacey.odhis.co.ke` as the custom domain
+with **Enforce HTTPS** on; GitHub renews the certificate itself. The `CNAME`
+file GitHub needs is written into `_site/` by `build-site.js`.
+
+The bare `odhis.co.ke` is free for other projects.
