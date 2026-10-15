@@ -2,10 +2,10 @@
   "name": "stacey-shop",
   "version": "1.0.0",
   "private": true,
-  "description": "Tacey Collections storefront, content pages and admin API",
+  "description": "Tacey Collections storefront (GitHub Pages) and Stacey's admin (Supabase)",
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/",
-    "build": "node build-partials.js"
+    "build": "node build-partials.js && node build-site.js"
   }
 }

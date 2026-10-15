@@ -9,25 +9,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const TEST_DATA_FILE = path.join(ROOT, 'data', 'products.pages-test.json');
 const SITE = 'https://tacey.odhis.co.ke';
+const { build } = require('../build-site.js');
+
+// Every test serves the freshly built _site/, the same files GitHub Pages
+// publishes, so these checks describe the live site rather than the repo.
+build();
 
 let server;
 let port = 3200;
 
 function startServer() {
-  if (fs.existsSync(TEST_DATA_FILE)) fs.unlinkSync(TEST_DATA_FILE);
   port += 1;
   return new Promise((resolve, reject) => {
     server = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
-      env: {
-        ...process.env,
-        PORT: String(port),
-        DATA_FILE: TEST_DATA_FILE,
-        ADMIN_PASSWORD: 'pages-test-secret',
-        SUPABASE_URL: '',
-        SUPABASE_SERVICE_KEY: ''
-      },
+      env: { ...process.env, PORT: String(port) },
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -45,7 +41,6 @@ function startServer() {
 
 function stopServer() {
   server.kill('SIGTERM');
-  if (fs.existsSync(TEST_DATA_FILE)) fs.unlinkSync(TEST_DATA_FILE);
 }
 
 const base = () => `http://127.0.0.1:${port}`;
@@ -84,27 +79,33 @@ test('unknown URLs return the branded 404 page, not a JSON blob', async () => {
   }
 });
 
-test('.html URLs redirect to their canonical clean path', async () => {
+test('each department page is its own page with its own canonical URL', async () => {
   await startServer();
   try {
-    for (const [ugly, clean] of [
-      ['/about.html', '/about'],
-      ['/faq.html', '/faq'],
-      ['/size-guide.html', '/size-guide']
-    ]) {
-      const res = await fetch(base() + ugly, { redirect: 'manual' });
-      assert.equal(res.status, 301, `${ugly} should redirect permanently`);
-      assert.equal(res.headers.get('location'), clean);
+    for (const dept of ['women', 'men', 'kids']) {
+      const html = await (await fetch(`${base()}/${dept}`)).text();
+      assert.match(html, new RegExp(`<link rel="canonical" href="${SITE}/${dept}">`));
+      assert.match(html, new RegExp(`<meta property="og:url" content="${SITE}/${dept}">`));
+      assert.doesNotMatch(html, /<title>Shop the Collection/, `/${dept} still has the generic shop title`);
     }
   } finally {
     stopServer();
   }
 });
 
-test('source directories are not served to the public', async () => {
+test('source, data and setup files are never published', async () => {
+  const published = fs.readdirSync(path.join(ROOT, '_site'), { recursive: true });
+  for (const secret of ['server.js', 'build-site.js', 'build-partials.js', 'package.json',
+                        'DEPLOY.md', 'DOMAIN.md', 'modern_guides.md']) {
+    assert.ok(!published.includes(secret), `${secret} must not be published`);
+  }
+  for (const dir of ['tests', 'data', 'partials', 'supabase', 'node_modules']) {
+    assert.ok(!published.some(f => f === dir || f.startsWith(dir + path.sep)), `${dir}/ must not be published`);
+  }
+
   await startServer();
   try {
-    for (const secret of ['/partials/footer.html', '/data/products.json', '/tests/pages-and-seo.test.js']) {
+    for (const secret of ['/partials/footer.html', '/data/products.json', '/tests/pages-and-seo.test.js', '/supabase/setup.sql']) {
       const res = await fetch(base() + secret);
       assert.equal(res.status, 404, `${secret} must not be readable`);
     }
@@ -113,20 +114,10 @@ test('source directories are not served to the public', async () => {
   }
 });
 
-test('responses carry security headers and sensible caching', async () => {
-  await startServer();
-  try {
-    const page = await fetch(`${base()}/about`);
-    assert.equal(page.headers.get('x-content-type-options'), 'nosniff');
-    assert.equal(page.headers.get('x-frame-options'), 'SAMEORIGIN');
-    assert.match(page.headers.get('cache-control'), /must-revalidate/);
-
-    // Images are stable, so they may be cached hard.
-    const asset = await fetch(`${base()}/assets/logo.jpeg`);
-    assert.match(asset.headers.get('cache-control'), /max-age=604800/);
-  } finally {
-    stopServer();
-  }
+test('the custom domain is configured for GitHub Pages', () => {
+  const cname = fs.readFileSync(path.join(ROOT, '_site', 'CNAME'), 'utf8').trim();
+  assert.equal(cname, new URL(SITE).host);
+  assert.ok(fs.existsSync(path.join(ROOT, '_site', '.nojekyll')), 'without .nojekyll, Pages may skip files');
 });
 
 test('every page links back into the rest of the site', async () => {
@@ -381,11 +372,10 @@ test('the M-Pesa paybill is published, consistent, and single-sourced', async ()
 });
 
 test('admin image uploads are compressed before they are stored', async () => {
-  // Product images are inlined into products.json as data URLs, and that
-  // JSON is what every shopper downloads from /api/products. An unedited
-  // phone photo is 3-5 MB and base64 adds a third; a catalogue of twenty
-  // unresized photos would be ~100 MB per visitor. Verified in a browser:
-  // a 5.7 MB 4032x3024 upload comes out 367 KB at 1200x900.
+  // An unedited phone photo is 3-5 MB; shoppers on mobile data would pay
+  // for every one. Verified in a browser: a 5.7 MB 4032x3024 upload comes
+  // out 367 KB at 1200x900. Photos then go to Supabase Storage, and only
+  // the URL is kept in the catalogue.
   const admin = fs.readFileSync(path.join(ROOT, 'admin.html'), 'utf8');
 
   assert.match(admin, /async function compressImage\(file\)/, 'the resize helper must exist');
@@ -396,11 +386,13 @@ test('admin image uploads are compressed before they are stored', async () => {
     `IMAGE_MAX_EDGE is ${maxEdge}px — large enough to defeat the point of resizing`);
 
   // Every file-picker handler has to go through it, not straight to the raw read.
-  const handlers = [...admin.matchAll(/(?:handleProductImageUpload[\s\S]{0,700}?|new-image-file'\)\.addEventListener[\s\S]{0,700}?)showToast/g)]
+  const handlers = [...admin.matchAll(/(?:handleProductImageUpload[\s\S]{0,1200}?|new-image-file'\)\.addEventListener[\s\S]{0,1200}?)Photo uploaded/g)]
     .map(m => m[0]);
   assert.ok(handlers.length >= 2, 'expected both upload paths (existing product, and new product)');
   for (const handler of handlers) {
     assert.match(handler, /await compressImage\(file\)/,
       'an upload path still stores the raw file — it must call compressImage first');
+    assert.match(handler, /uploadPhoto\(dataUrl\)/,
+      'an upload path keeps the photo inline instead of uploading it to Storage');
   }
 });

@@ -505,13 +505,17 @@
     <div class="auth-card">
       <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
       <h1 class="auth-title">Welcome back, Stacey 💐</h1>
-      <p class="auth-sub">Your private stock room. Enter your passcode to manage products, shelves and availability.</p>
+      <p class="auth-sub">Your private stock room. Sign in to manage products, shelves and availability.</p>
 
-      <form id="login-form" autocomplete="off">
+      <form id="login-form">
         <div class="form-group">
-          <label class="form-label" for="password-input">Passcode</label>
+          <label class="form-label" for="email-input">Email</label>
+          <input type="email" id="email-input" class="form-input" placeholder="you@example.com" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password-input">Password</label>
           <div class="password-wrap">
-            <input type="password" id="password-input" class="form-input" placeholder="Enter your passcode…" autocomplete="current-password" inputmode="numeric" required>
+            <input type="password" id="password-input" class="form-input" placeholder="Enter your password…" autocomplete="current-password" required>
             <button type="button" class="toggle-eye" id="toggle-eye" aria-label="Show password">👁</button>
           </div>
         </div>
@@ -521,8 +525,8 @@
       <div id="login-error" style="display:none;" class="auth-error"></div>
 
       <p class="auth-hint">
-        Forgot the password? It is set by whoever manages the website hosting —
-        ask them to update <strong>ADMIN_PASSWORD</strong> and share the new one with you.
+        Forgot the password? Ask whoever manages the website to reset it for
+        you in Supabase (Authentication → Users).
       </p>
     </div>
   </div>
@@ -630,18 +634,19 @@
   <!-- Toast -->
   <div id="toast" role="alert" aria-live="polite"></div>
 
+  <script src="store.js"></script>
   <script>
   /* ============================================================
-     Tacey Stock Room — all changes are saved on the server.
-     Auth: password → session token from /api/admin/login.
+     Tacey Stock Room — all changes are saved to Supabase.
+     Auth: Supabase email + password (see store.js). Only accounts
+     listed in shop_admins can save; Supabase enforces that.
      ============================================================ */
 
-  const TOKEN_KEY = 'tacey_admin_token';
+  const Store = window.TaceyStore;
   let products = [];
 
   const $ = id => document.getElementById(id);
 
-  function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
 
   /* ── Toast ── */
   let toastTimer;
@@ -659,41 +664,17 @@
   }
 
   /* ── API ── */
-  async function apiLogin(password) {
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Login failed');
-    return data.token;
-  }
-
   async function apiLoadProducts() {
-    const res = await fetch('/api/products');
-    if (!res.ok) throw new Error('Could not load products');
-    const data = await res.json();
-    if (!Array.isArray(data)) throw new Error('Bad product data');
-    return data;
+    return Store.loadProducts();
   }
 
   async function apiSaveProducts(list) {
-    const res = await fetch('/api/products', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getToken()}`
-      },
-      body: JSON.stringify(list)
-    });
-    if (res.status === 401) {
-      sessionStorage.removeItem(TOKEN_KEY);
-      showScreen('screen-login');
-      throw new Error('Session expired — please log in again');
+    try {
+      await Store.saveProducts(list);
+    } catch (err) {
+      if (err.code === 'AUTH') showScreen('screen-login');
+      throw err;
     }
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Save failed');
   }
 
   async function persist(successMsg) {
@@ -758,8 +739,7 @@
     btn.textContent = 'Checking…';
     errEl.style.display = 'none';
     try {
-      const token = await apiLogin($('password-input').value);
-      sessionStorage.setItem(TOKEN_KEY, token);
+      await Store.signIn($('email-input').value.trim(), $('password-input').value);
       $('password-input').value = '';
       showToast('Welcome back, Stacey! 💅', 'success');
       await enterDashboard();
@@ -949,12 +929,11 @@
   };
 
   /* ── Image helpers ──
-     Uploaded images are inlined into products.json as data URLs, and that
-     JSON is what every shopper downloads from /api/products on page load.
-     An unedited phone photo is 3-5 MB, and base64 adds a third on top — a
-     catalogue of twenty would be ~100 MB per visitor, on Kenyan mobile
-     data. So every upload is resized and re-encoded here, in the browser,
-     before it is ever stored. */
+     Photos go to Supabase Storage and only their URL is kept in the
+     catalogue, so shoppers download each photo when they see it rather
+     than every photo up front. An unedited phone photo is 3-5 MB, so each
+     one is still resized and re-encoded here, in the browser, before it is
+     uploaded — that is what keeps the shop quick on Kenyan mobile data. */
   const IMAGE_MAX_EDGE = 1200;   // ample for a product card or the detail view
   const IMAGE_QUALITY  = 0.82;
 
@@ -1010,6 +989,11 @@
     return Math.round((dataUrl.length * 3 / 4) / 1024);
   }
 
+  async function uploadPhoto(dataUrl) {
+    const blob = await (await fetch(dataUrl)).blob();
+    return Store.uploadImage(blob);
+  }
+
   window.handleProductImageUpload = async function(input, productId) {
     const file = input.files?.[0];
     if (!file) return;
@@ -1017,14 +1001,16 @@
     if (!row) return;
     try {
       const dataUrl = await compressImage(file);
+      showToast(`⏫ Uploading photo (${dataUrlKb(dataUrl)} KB)…`, 'success');
+      const url = await uploadPhoto(dataUrl);
       const imageInput = row.querySelector('[data-field="image"]');
       const preview = row.querySelector('.product-row-img');
-      if (imageInput) imageInput.value = dataUrl;
-      if (preview) preview.src = dataUrl;
-      showToast(`🖼 Image ready (${dataUrlKb(dataUrl)} KB) — click Save to keep it`, 'success');
+      if (imageInput) imageInput.value = url;
+      if (preview) preview.src = url;
+      showToast('🖼 Photo uploaded — click Save to keep it', 'success');
     } catch (error) {
       console.error(error);
-      showToast('⚠️ Could not read this image', 'error');
+      showToast(`⚠️ ${error.message || 'Could not upload this image'}`, 'error');
     }
   };
 
@@ -1043,12 +1029,13 @@
     if (!file) return;
     try {
       const dataUrl = await compressImage(file);
-      $('new-image').value = dataUrl;
       $('new-image-preview').src = dataUrl;
-      showToast(`🖼 Image selected (${dataUrlKb(dataUrl)} KB)`, 'success');
+      showToast(`⏫ Uploading photo (${dataUrlKb(dataUrl)} KB)…`, 'success');
+      $('new-image').value = await uploadPhoto(dataUrl);
+      showToast('🖼 Photo uploaded', 'success');
     } catch (error) {
       console.error(error);
-      showToast('⚠️ Could not read the selected image', 'error');
+      showToast(`⚠️ ${error.message || 'Could not upload the selected image'}`, 'error');
     }
   });
 
@@ -1102,24 +1089,16 @@
   });
 
   $('logout-btn').addEventListener('click', async () => {
-    const token = getToken();
-    sessionStorage.removeItem(TOKEN_KEY);
-    if (token) {
-      fetch('/api/admin/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => {});
-    }
+    await Store.signOut();
     showScreen('screen-login');
     showToast('Logged out. See you soon! 👋', 'success');
   });
 
-  /* ── Boot: resume session if the token is still valid ── */
+  /* ── Boot: resume the session if it is still valid ── */
   (async function boot() {
-    const token = getToken();
-    if (!token) return;
     try {
-      const res = await fetch('/api/admin/session', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) { await enterDashboard(); return; }
-    } catch { /* server unreachable — stay on login */ }
-    sessionStorage.removeItem(TOKEN_KEY);
+      if (await Store.hasSession()) await enterDashboard();
+    } catch { /* Supabase unreachable — stay on login */ }
   })();
   </script>
 </body>

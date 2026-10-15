@@ -10,9 +10,7 @@ let PRODUCTS = [];
 
 async function loadProductsFromApi() {
   try {
-    const res = await fetch('/api/products');
-    if (!res.ok) throw new Error('Failed to fetch');
-    const data = await res.json();
+    const data = await window.TaceyStore.loadProducts();
     if (Array.isArray(data)) {
       PRODUCTS = normalizeQty(data);
       saveProducts();

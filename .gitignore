@@ -7,3 +7,4 @@ npm-debug.log*
 coverage/
 .railway/
 data/*.test.json
+_site/
