@@ -13,8 +13,8 @@ storefront, the content pages, the admin panel, and the products API.
 
 ## Custom domain
 
-The site is built for **taceycollections.co.ke**. Registering it and pointing
-DNS at Render is a separate walkthrough — see **[DOMAIN.md](DOMAIN.md)**.
+The site is built for **tacey.odhis.co.ke**. Pointing
+its DNS at Render is a separate walkthrough — see **[DOMAIN.md](DOMAIN.md)**.
 
 ## 1. Host the site on Render (free)
 
@@ -63,7 +63,7 @@ Stacey's stock edits eventually reset. Supabase's free tier fixes that.
 
 Send her two things:
 
-- the admin link: `https://taceycollections.co.ke/admin.html`
+- the admin link: `https://tacey.odhis.co.ke/admin.html`
   (or `https://YOUR-SITE.onrender.com/admin.html` before the domain is live)
 - the `ADMIN_PASSWORD` you chose
 

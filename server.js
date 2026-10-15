@@ -283,7 +283,7 @@ function readBody(req) {
 
 const NOT_FOUND_PAGE = '404.html';
 
-/* Set CANONICAL_HOST (e.g. taceycollections.co.ke) in production to fold
+/* Set CANONICAL_HOST (e.g. tacey.odhis.co.ke) in production to fold
    www onto the apex domain. Unset locally, so nothing redirects in dev. */
 const canonicalHost = (process.env.CANONICAL_HOST || '').trim().toLowerCase();
 

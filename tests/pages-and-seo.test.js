@@ -10,7 +10,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const TEST_DATA_FILE = path.join(ROOT, 'data', 'products.pages-test.json');
-const SITE = 'https://taceycollections.co.ke';
+const SITE = 'https://tacey.odhis.co.ke';
 
 let server;
 let port = 3200;

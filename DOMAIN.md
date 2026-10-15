@@ -1,157 +1,77 @@
-# Connecting taceycollections.co.ke
+# Connecting tacey.odhis.co.ke
 
-The site is already built for this domain — every canonical tag, Open Graph
-URL, sitemap entry and structured-data record points at
-`https://taceycollections.co.ke`. What is left is buying the name and pointing
-it at Render.
+The shop lives at **https://tacey.odhis.co.ke**, a sub-address of `odhis.co.ke`
+(registered at Truehost, 2026-10-15). Every canonical tag, Open Graph URL,
+sitemap entry and structured-data record already points there.
 
-Budget: **the domain is the only cost.** A `.co.ke` runs roughly
-**KES 1,000–1,500 per year**. Hosting (Render), DNS (Cloudflare) and TLS
-certificates are all free.
+Because it is a sub-address, not the bare domain, a single ordinary CNAME
+record at Truehost is enough. No Cloudflare, no nameserver changes. The bare
+`odhis.co.ke` stays free for other projects (e.g. `venuecheck.odhis.co.ke`).
+
+Cost: only the domain renewal. Hosting (Render) and the TLS certificate are free.
 
 ---
 
-## Step 1 — Register the domain (~KES 1,200/yr)
+## Step 1 — Tell Render about the domain
 
-`.co.ke` names are sold through KENIC-accredited Kenyan registrars. Any of
-these work:
+1. Open the `stacey-shop` service in the [Render dashboard](https://dashboard.render.com).
+2. **Settings → Custom Domains → Add Custom Domain** → `tacey.odhis.co.ke`.
+3. Render shows the target, your service hostname, e.g. `stacey-shop.onrender.com`.
 
-| Registrar | Notes |
-|---|---|
-| [Truehost Kenya](https://truehost.co.ke) | Usually the cheapest, pays by M-Pesa |
-| [Kenya Web Experts](https://kenyawebexperts.co.ke) | Long-established, good support |
-| [HostPinnacle Kenya](https://hostpinnacle.co.ke) | M-Pesa checkout |
-| [Safaricom Domains](https://domains.safaricom.co.ke) | Most convenient if you already use Safaricom billing |
+## Step 2 — Add the DNS record at Truehost
 
-Search for `taceycollections.co.ke` and buy **the domain only** — decline the
-hosting, email and "website builder" upsells. You do not need them.
+Truehost client area → **Domains → odhis.co.ke → Manage DNS** (DNS Management),
+then add:
 
-> Register for **two years** if the price difference is small. It saves a
-> renewal scare, and a domain lapsing takes the whole shop offline.
-
-## Step 2 — Put the domain on Cloudflare (free)
-
-Render cannot serve a bare domain (`taceycollections.co.ke` with no `www`)
-from a plain CNAME, and most Kenyan registrars do not support the `ALIAS`
-record that would fix it. Cloudflare's free plan solves this with CNAME
-flattening, so this step is not optional bureaucracy — it is what makes the
-bare domain work.
-
-1. Create a free account at [cloudflare.com](https://cloudflare.com).
-2. **Add a site** → enter `taceycollections.co.ke` → choose the **Free** plan.
-3. Cloudflare shows you two nameservers, something like
-   `ana.ns.cloudflare.com` and `rick.ns.cloudflare.com`.
-4. Go back to your registrar's control panel, find **Nameservers** (sometimes
-   "DNS Management" or "Child Nameservers"), and replace whatever is there
-   with Cloudflare's two.
-5. Wait for Cloudflare to confirm the domain is active. This is usually
-   under an hour, but the official window is up to 24 hours.
-
-## Step 3 — Tell Render about the domain
-
-1. Open your service in the [Render dashboard](https://dashboard.render.com).
-2. **Settings → Custom Domains → Add Custom Domain.**
-3. Add **both**, one at a time:
-   - `taceycollections.co.ke`
-   - `www.taceycollections.co.ke`
-4. Render shows the target to point at — your service hostname, e.g.
-   `stacey-shop.onrender.com`. Copy it; you need it in the next step.
-
-## Step 4 — Add the DNS records in Cloudflare
-
-In Cloudflare, open **DNS → Records** and add these two:
-
-| Type | Name | Target | Proxy status |
+| Type | Host / Name | Value / Target | TTL |
 |---|---|---|---|
-| CNAME | `@` | `stacey-shop.onrender.com` | **DNS only** (grey cloud) |
-| CNAME | `www` | `stacey-shop.onrender.com` | **DNS only** (grey cloud) |
+| CNAME | `tacey` | `stacey-shop.onrender.com` | 3600 (or default) |
 
-Two details that cause most of the pain if you get them wrong:
+Use `tacey`, not `tacey.odhis.co.ke`. Truehost appends the domain itself; typing
+the full name usually ends up as `tacey.odhis.co.ke.odhis.co.ke`.
 
-- **Use `@` for the bare domain.** Cloudflare flattens it automatically, which
-  is the whole reason we are using Cloudflare.
-- **Keep the proxy OFF (grey cloud).** With the orange cloud on, Render's
-  certificate check can fail and you can end up in a redirect loop. Render
-  issues its own free certificate, so you are not losing HTTPS. You can turn
-  the proxy on later, once the certificate has been issued, if you want
-  Cloudflare's caching — set SSL/TLS mode to **Full (strict)** first.
+If the DNS page says the domain uses other nameservers, first set the
+nameservers back to Truehost's defaults (`ns1.truehost.cloud` /
+`ns2.truehost.cloud` or whatever the panel lists as default).
 
-## Step 5 — Set the canonical host on Render
+## Step 3 — Verify
 
-In **Render → Environment**, confirm:
-
-```
-CANONICAL_HOST = taceycollections.co.ke
-```
-
-This makes `www.taceycollections.co.ke` issue a single permanent redirect to
-the bare domain, so Google never indexes the site twice and splits its own
-ranking between two addresses.
-
-Then **Manual Deploy → Deploy latest commit**.
-
-## Step 6 — Verify
-
-Back in Render's Custom Domains panel both entries should read **Verified**,
-with a certificate issued. Then check from a terminal:
+Back in Render's Custom Domains panel, hit **Verify**. It should read
+**Verified** with a certificate issued, usually within minutes of DNS
+resolving (allow up to a few hours for a freshly bought `.co.ke`).
 
 ```bash
-# Bare domain serves the site
-curl -I https://taceycollections.co.ke
-
-# www folds onto the bare domain with one 301
-curl -I https://www.taceycollections.co.ke
-
-# The SEO files are live
-curl https://taceycollections.co.ke/robots.txt
-curl https://taceycollections.co.ke/sitemap.xml
+curl -I https://tacey.odhis.co.ke
+curl https://tacey.odhis.co.ke/api/health
+curl https://tacey.odhis.co.ke/sitemap.xml
 ```
 
-Certificate issuance can take a few minutes after DNS resolves. A browser
-warning during that window is normal; if it is still there after an hour,
-the proxy is probably switched on in Cloudflare.
+## Step 4 — Tell Google the site exists
 
-## Step 7 — Tell Google the site exists
+1. [Google Search Console](https://search.google.com/search-console) → add a
+   **URL prefix** property for `https://tacey.odhis.co.ke/` and verify with the
+   HTML-tag or DNS method.
+2. **Sitemaps →** submit `sitemap.xml`.
 
-1. Go to [Google Search Console](https://search.google.com/search-console).
-2. Add a property for `taceycollections.co.ke` (the **Domain** type — verify
-   with the TXT record it gives you, added in Cloudflare DNS).
-3. **Sitemaps →** submit `sitemap.xml`.
-4. Do the same at [Bing Webmaster Tools](https://www.bing.com/webmasters) if
-   you want the extra traffic. It takes two minutes and imports from Google.
-
-Indexing takes days to weeks. Nothing is broken if the shop is not on Google
-the next morning.
-
----
+Indexing takes days to weeks.
 
 ## Afterwards: update these links
 
-Once the domain is live, the domain becomes the address you hand out:
-
-- Stacey's admin panel moves to `https://taceycollections.co.ke/admin.html`
-- The Instagram bio link
-- WhatsApp Business profile → **Website**
-- Google Business Profile, if you create one (recommended — it is free and it
-  is how local customers find a Nairobi boutique)
+- Stacey's admin panel: `https://tacey.odhis.co.ke/admin.html`
+- Instagram bio link, WhatsApp Business profile → **Website**
+- Google Business Profile, if you create one
 
 ## Keeping the free tier awake
 
-Render's free service sleeps after ~15 minutes without traffic, and the next
-visitor waits 30–60 seconds for it to wake. For a shop, that is the difference
-between a sale and a bounce.
-
-Create a free monitor at [uptimerobot.com](https://uptimerobot.com) that pings
-`https://taceycollections.co.ke/api/health` every 5 minutes. Free, and it keeps
-the site warm around the clock.
+Render's free service sleeps after ~15 minutes without visitors. Create a free
+monitor at [uptimerobot.com](https://uptimerobot.com) that pings
+`https://tacey.odhis.co.ke/api/health` every 5 minutes.
 
 ## If something goes wrong
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `DNS_PROBE_FINISHED_NXDOMAIN` | Nameservers not switched yet | Recheck step 2.4, then wait |
-| Certificate warning after an hour | Cloudflare proxy is on | Set both records to **DNS only** |
-| Redirect loop | Cloudflare proxy on with SSL mode "Flexible" | **DNS only**, or SSL mode **Full (strict)** |
-| `www` works, bare domain does not | Apex record missing or not `@` | Recheck the `@` CNAME in step 4 |
+| `DNS_PROBE_FINISHED_NXDOMAIN` | Domain not activated yet, or record missing | Check Truehost shows the domain as Active, recheck the CNAME |
 | Render says "Domain not verified" | DNS has not propagated | Wait, then hit **Verify** again |
+| Record resolves to `tacey.odhis.co.ke.odhis.co.ke` | Full name typed in the Host field | Host must be just `tacey` |
 | First load takes 40 seconds | Free tier went to sleep | Set up the UptimeRobot ping above |

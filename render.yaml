@@ -23,9 +23,9 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_KEY
         sync: false
-      # Custom domain. With this set, www.taceycollections.co.ke issues a
+      # Custom domain. With this set, www.tacey.odhis.co.ke issues a
       # single 301 to the bare domain so Google only ever indexes one host.
       # Safe to set before the domain exists: it only redirects requests
       # that arrive on the www host, so *.onrender.com keeps working.
       - key: CANONICAL_HOST
-        value: taceycollections.co.ke
+        value: tacey.odhis.co.ke
