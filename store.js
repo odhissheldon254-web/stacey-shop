@@ -12,8 +12,8 @@
  * only read.
  */
 (function (root) {
-  const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-  const SUPABASE_KEY = 'YOUR-PUBLISHABLE-KEY';
+  const SUPABASE_URL = 'https://hjivgncvlwtorzdbvbbm.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_GuFuadK4K8I_tMGzoCBL-w_HCSbSu0z';
   const IMAGE_BUCKET = 'product-images';
   const SESSION_KEY = 'tacey_admin_session';
 
