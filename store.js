@@ -73,8 +73,11 @@
     return { res, data };
   }
 
+  // Phones love to capitalise the first letter of an email; Supabase does not.
+  const cleanEmail = email => String(email || '').trim().toLowerCase();
+
   async function signIn(email, password) {
-    const { res, data } = await authRequest('token?grant_type=password', { email, password });
+    const { res, data } = await authRequest('token?grant_type=password', { email: cleanEmail(email), password });
     if (res.status === 429) throw new Error('Too many attempts — wait a few minutes and try again');
     if (!res.ok) throw new Error('Wrong email or password');
     writeSession(toSession(data));
@@ -100,6 +103,52 @@
     const s = readSession();
     writeSession(null);
     if (s) authRequest('logout', null, s.access_token).catch(() => {});
+  }
+
+  /* ── Forgotten password ──
+     1. requestPasswordReset emails a link back to the admin page.
+     2. On arrival, takeRecoveryFromUrl turns that link into a session.
+     3. updatePassword sets the new password for that session. */
+  const RESET_REDIRECT = 'https://taceycollections.odhis.co.ke/admin.html';
+
+  async function requestPasswordReset(email) {
+    const { res } = await authRequest(
+      `recover?redirect_to=${encodeURIComponent(RESET_REDIRECT)}`, { email: cleanEmail(email) });
+    if (res.status === 429) throw new Error('Too many reset emails — wait a few minutes and try again');
+    if (res.status >= 500) throw new Error("The reset email couldn't be sent right now. Message the shop's website manager on WhatsApp.");
+    // Any other answer is treated the same, so the page never reveals
+    // whether an email belongs to an account.
+  }
+
+  /* Returns 'recovery' when the page was opened from a reset link (the
+     session is now stored), 'expired' when the link was old or used, or
+     null when there is nothing to do. Clears the link from the address bar. */
+  function takeRecoveryFromUrl() {
+    const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+    if (!params.has('access_token') && !params.has('error')) return null;
+    history.replaceState(null, '', location.pathname);
+    if (params.has('error')) return 'expired';
+    writeSession(toSession({
+      access_token: params.get('access_token'),
+      refresh_token: params.get('refresh_token'),
+      expires_in: params.get('expires_in')
+    }));
+    return params.get('type') === 'recovery' ? 'recovery' : null;
+  }
+
+  async function updatePassword(password) {
+    if (String(password).length < 10) throw new Error('Use at least 10 characters');
+    const token = await requireToken();
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 422 && /same/i.test(data.msg || data.error_description || '')) {
+      throw new Error('That is the old password — choose a new one');
+    }
+    if (!res.ok) throw new Error(data.msg || 'Could not save the new password');
   }
 
   /* ── Catalogue ── */
@@ -166,7 +215,8 @@
     return `${SUPABASE_URL}/storage/v1/object/public/${IMAGE_BUCKET}/${name}`;
   }
 
-  const api = { sanitizeProducts, signIn, signOut, hasSession, loadProducts, saveProducts, uploadImage };
+  const api = { sanitizeProducts, signIn, signOut, hasSession, loadProducts, saveProducts, uploadImage,
+                requestPasswordReset, takeRecoveryFromUrl, updatePassword };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TaceyStore = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -165,6 +165,22 @@
       75%{transform:translateX(6px)}
     }
 
+    .link-btn {
+      background: none; border: 0; padding: 0.25rem;
+      color: var(--primary); font-weight: 600; font-size: 0.9rem;
+      text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+    }
+    .auth-note {
+      background: hsl(150 60% 40% / 0.12);
+      border: 1px solid hsl(150 60% 40% / 0.35);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      margin-top: 0.9rem;
+      text-align: center;
+      line-height: 1.5;
+    }
+
     .auth-hint {
       text-align: center;
       margin-top: 1.25rem;
@@ -530,12 +546,12 @@
       <form id="login-form">
         <div class="form-group">
           <label class="form-label" for="email-input">Email</label>
-          <input type="email" id="email-input" class="form-input" placeholder="you@example.com" autocomplete="username" required>
+          <input type="email" id="email-input" class="form-input" placeholder="you@example.com" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" required>
         </div>
         <div class="form-group">
           <label class="form-label" for="password-input">Password</label>
           <div class="password-wrap">
-            <input type="password" id="password-input" class="form-input" placeholder="Enter your password…" autocomplete="current-password" required>
+            <input type="password" id="password-input" class="form-input" placeholder="Enter your password…" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required>
             <button type="button" class="toggle-eye" id="toggle-eye" aria-label="Show password">👁</button>
           </div>
         </div>
@@ -545,9 +561,50 @@
       <div id="login-error" style="display:none;" class="auth-error"></div>
 
       <p class="auth-hint">
-        Forgot the password? Ask whoever manages the website to reset it for
-        you in Supabase (Authentication → Users).
+        <button type="button" class="link-btn" id="forgot-link">Forgot password?</button>
       </p>
+    </div>
+  </div>
+
+  <!-- ── Forgot password: request a link ── -->
+  <div class="screen auth-screen" id="screen-forgot">
+    <div class="auth-card">
+      <img src="assets/logo.webp" alt="Tacey Collections" class="auth-logo">
+      <h1 class="auth-title">Reset your password</h1>
+      <p class="auth-sub">Enter your admin email and we'll send you a link to choose a new password.</p>
+      <form id="forgot-form">
+        <div class="form-group">
+          <label class="form-label" for="forgot-email">Email</label>
+          <input type="email" id="forgot-email" class="form-input" placeholder="you@example.com" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+        </div>
+        <button type="submit" class="btn-auth btn-primary" id="forgot-btn">Send reset link</button>
+      </form>
+      <div id="forgot-msg" style="display:none;" class="auth-note"></div>
+      <p class="auth-hint"><button type="button" class="link-btn" id="back-to-login">Back to sign in</button></p>
+    </div>
+  </div>
+
+  <!-- ── Forgot password: choose the new one (opened from the email link) ── -->
+  <div class="screen auth-screen" id="screen-reset">
+    <div class="auth-card">
+      <img src="assets/logo.webp" alt="Tacey Collections" class="auth-logo">
+      <h1 class="auth-title">Choose a new password</h1>
+      <p class="auth-sub">At least 10 characters. Something you can type easily on your phone.</p>
+      <form id="reset-form">
+        <div class="form-group">
+          <label class="form-label" for="new-password">New password</label>
+          <div class="password-wrap">
+            <input type="password" id="new-password" class="form-input" autocomplete="new-password" minlength="10" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+            <button type="button" class="toggle-eye" data-eye-for="new-password" aria-label="Show password">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-password-2">Type it again</label>
+          <input type="password" id="new-password-2" class="form-input" autocomplete="new-password" minlength="10" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+        </div>
+        <button type="submit" class="btn-auth btn-primary" id="reset-btn">Save and sign in</button>
+      </form>
+      <div id="reset-error" style="display:none;" class="auth-error"></div>
     </div>
   </div>
 
@@ -1124,8 +1181,73 @@
     showToast('Logged out. See you soon! 👋', 'success');
   });
 
-  /* ── Boot: resume the session if it is still valid ── */
+  /* ── Forgot password ── */
+  $('forgot-link').addEventListener('click', () => {
+    $('forgot-email').value = $('email-input').value;
+    $('forgot-msg').style.display = 'none';
+    showScreen('screen-forgot');
+  });
+  $('back-to-login').addEventListener('click', () => showScreen('screen-login'));
+
+  $('forgot-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('forgot-btn'), msg = $('forgot-msg');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await Store.requestPasswordReset($('forgot-email').value);
+      msg.className = 'auth-note';
+      msg.textContent = 'If that email is an admin account, a reset link is on its way. Check your inbox and spam folder; the link works once.';
+    } catch (err) {
+      msg.className = 'auth-error';
+      msg.textContent = `❌ ${err.message}`;
+    } finally {
+      msg.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Send reset link';
+    }
+  });
+
+  document.querySelectorAll('[data-eye-for]').forEach(btn => btn.addEventListener('click', () => {
+    const input = $(btn.dataset.eyeFor);
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }));
+
+  $('reset-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('reset-btn'), errEl = $('reset-error');
+    errEl.style.display = 'none';
+    const pw = $('new-password').value;
+    if (pw !== $('new-password-2').value) {
+      errEl.textContent = '❌ The two passwords don\'t match';
+      errEl.style.display = 'block';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      await Store.updatePassword(pw);
+      $('new-password').value = $('new-password-2').value = '';
+      showToast('New password saved. Welcome back! 💅', 'success');
+      await enterDashboard();
+    } catch (err) {
+      errEl.textContent = `❌ ${err.message}`;
+      errEl.style.display = 'block';
+      if (err.code === 'AUTH') showScreen('screen-forgot');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save and sign in';
+    }
+  });
+
+  /* ── Boot: a reset link, or resume the session if it is still valid ── */
   (async function boot() {
+    const recovery = Store.takeRecoveryFromUrl();
+    if (recovery === 'recovery') { showScreen('screen-reset'); return; }
+    if (recovery === 'expired') {
+      showScreen('screen-forgot');
+      const msg = $('forgot-msg');
+      msg.className = 'auth-error';
+      msg.textContent = 'That reset link has expired or was already used. Send yourself a new one.';
+      msg.style.display = 'block';
+      return;
+    }
     try {
       if (await Store.hasSession()) await enterDashboard();
     } catch { /* Supabase unreachable — stay on login */ }

@@ -105,3 +105,57 @@ test('an expiring session is refreshed instead of logging her out', async () => 
   assert.equal(await store.hasSession(), true);
   assert.ok(refreshed);
 });
+
+test('emails are tidied before sign-in and reset (phones capitalise them)', async () => {
+  const sent = [];
+  const store = freshStore(async (url, opts = {}) => {
+    sent.push({ url, body: JSON.parse(opts.body || '{}') });
+    return json(200, { access_token: 't', refresh_token: 'r', expires_in: 3600 });
+  });
+  await store.signIn('  Taceycollections@Gmail.com ', 'pw');
+  await store.requestPasswordReset('Taceycollections@gmail.com');
+  assert.equal(sent[0].body.email, 'taceycollections@gmail.com');
+  assert.equal(sent[1].body.email, 'taceycollections@gmail.com');
+  assert.match(sent[1].url, /\/auth\/v1\/recover\?redirect_to=https%3A%2F%2Ftaceycollections\.odhis\.co\.ke%2Fadmin\.html$/);
+});
+
+test('a reset request never reveals whether the email has an account', async () => {
+  const store = freshStore(async () => json(400, { msg: 'User not found' }));
+  await store.requestPasswordReset('stranger@example.com'); // resolves, no error
+});
+
+function withLocation(hash, fn) {
+  let replaced = null;
+  global.location = { hash, pathname: '/admin.html' };
+  global.history = { replaceState: (_s, _t, url) => { replaced = url; } };
+  try { return fn(() => replaced); } finally { delete global.location; delete global.history; }
+}
+
+test('opening the reset link signs her in for the password change and clears the link', async () => {
+  const store = freshStore(async () => json(200, {}));
+  withLocation('#access_token=abc&refresh_token=def&expires_in=3600&type=recovery', replaced => {
+    assert.equal(store.takeRecoveryFromUrl(), 'recovery');
+    assert.equal(replaced(), '/admin.html', 'the token must not stay in the address bar');
+  });
+  assert.equal(await store.hasSession(), true);
+});
+
+test('an expired or reused reset link is reported, not silently ignored', () => {
+  const store = freshStore(async () => json(200, {}));
+  withLocation('#error=access_denied&error_code=otp_expired', () => {
+    assert.equal(store.takeRecoveryFromUrl(), 'expired');
+  });
+  withLocation('', () => assert.equal(store.takeRecoveryFromUrl(), null));
+});
+
+test('a new password must be at least 10 characters', async () => {
+  let calls = 0;
+  const store = freshStore(async () => { calls++; return json(200, {}); });
+  await assert.rejects(store.updatePassword('short'), /10 characters/);
+  assert.equal(calls, 0);
+});
+
+test('a failed reset email is reported instead of promising it is on its way', async () => {
+  const store = freshStore(async () => json(500, { msg: 'Error sending recovery email' }));
+  await assert.rejects(store.requestPasswordReset('taceycollections@gmail.com'), /couldn't be sent/);
+});
