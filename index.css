@@ -1552,11 +1552,18 @@
   background: rgba(6, 6, 8, 0.7);
   backdrop-filter: blur(8px);
   opacity: 0;
-  transition: opacity var(--transition-smooth);
+  transition: opacity var(--transition-smooth), visibility var(--transition-smooth);
 }
+
+/* Invisible but present on phones, so it must never catch taps unless the
+   menu is open: without this it sat over the whole shop and swallowed
+   every tap on products, the bag and the tab bar. */
+.nav-drawer-backdrop { pointer-events: none; visibility: hidden; }
 
 .nav-drawer-backdrop.open {
   opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
 }
 
 /* Nav Drawer Panel */

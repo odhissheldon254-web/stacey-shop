@@ -396,3 +396,12 @@ test('admin image uploads are compressed before they are stored', async () => {
       'an upload path keeps the photo inline instead of uploading it to Storage');
   }
 });
+
+test('the hidden menu backdrop never blocks taps on phones', () => {
+  // It is display:block but transparent on small screens. Without
+  // pointer-events:none it covered the whole shop and swallowed every tap
+  // on products, the bag and the tab bar.
+  const css = fs.readFileSync(path.join(ROOT, 'index.css'), 'utf8');
+  assert.match(css, /\.nav-drawer-backdrop\s*\{[^}]*pointer-events:\s*none/, 'closed backdrop must not catch taps');
+  assert.match(css, /\.nav-drawer-backdrop\.open\s*\{[^}]*pointer-events:\s*auto/, 'open backdrop must catch taps to close the menu');
+});
