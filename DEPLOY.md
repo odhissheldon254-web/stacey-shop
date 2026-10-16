@@ -66,10 +66,28 @@ if one appears.
    on conflict do nothing;
    ```
 
-**To change her email later:** Authentication → Users → her account → change
-the email. She stays an admin, because `shop_admins` points at her account,
-not at the address. **To reset her password:** same screen → Send password
-recovery, or set a new one.
+Admins today: Stacey (`taceycollections@gmail.com`) and Sheldon
+(`odhissheldon254@gmail.com`, backup).
+
+**Deleting and recreating an account gives it a new id**, so it drops off the
+admin list: run step 2 again afterwards. **To change an email** instead:
+Authentication → Users → the account → change the email. It stays an admin,
+because `shop_admins` points at the account, not the address.
+
+### Forgotten passwords
+
+The admin sign-in screen has **Forgot password?**. It emails a link back to
+`/admin.html` (allowed under Authentication → URL Configuration, with the Site
+URL set to the shop), where she chooses a new password and is signed in.
+
+**Pending: a custom email sender.** Supabase's built-in sender only mails
+members of the Supabase team, at most 2 an hour, so the reset email cannot
+reach Stacey yet. To fix it: on her Gmail, turn on 2-Step Verification, create
+an app password (myaccount.google.com/apppasswords), then in Supabase →
+Authentication → Emails → SMTP Settings enable custom SMTP with host
+`smtp.gmail.com`, port `465`, username and sender `taceycollections@gmail.com`,
+sender name `Tacey Collections`, and the app password. Until then the page
+says the email couldn't be sent, rather than pretending it was.
 
 ## Custom domain
 

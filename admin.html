@@ -1141,7 +1141,7 @@
       qty,
       category: $('new-category').value.trim() || 'Clothes',
       gender: $('new-gender').value,
-      image: $('new-image').value.trim() || 'assets/logo.jpeg',
+      image: $('new-image').value.trim() || 'assets/brand_flyer.jpeg',
       description: $('new-desc').value.trim(),
       tags: $('new-tags').value.split(',').map(t => t.trim()).filter(Boolean),
       inStock: qty > 0,
@@ -1158,7 +1158,7 @@
     ['new-name','new-price','new-image','new-desc','new-tags'].forEach(id => { $(id).value = ''; });
     $('new-qty').value = '1';
     $('new-image-file').value = '';
-    $('new-image-preview').src = 'assets/logo.jpeg';
+    $('new-image-preview').src = 'assets/brand_flyer.jpeg';
     $('new-instock').checked = true;
     $('new-featured').checked = false;
   });
