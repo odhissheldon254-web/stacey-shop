@@ -523,7 +523,7 @@
   <!-- ── Login ── -->
   <div class="screen auth-screen active" id="screen-login">
     <div class="auth-card">
-      <img src="assets/logo.jpeg" alt="Tacey Collections" class="auth-logo">
+      <img src="assets/logo.webp" alt="Tacey Collections" class="auth-logo">
       <h1 class="auth-title">Welcome back, Stacey 💐</h1>
       <p class="auth-sub">Your private stock room. Sign in to manage products, shelves and availability.</p>
 
@@ -556,7 +556,7 @@
 
     <nav class="dash-navbar">
       <div class="dash-brand">
-        <img src="assets/logo.jpeg" alt="Tacey Collections" class="dash-logo">
+        <img src="assets/logo.webp" alt="Tacey Collections" class="dash-logo">
         <span class="dash-brand-text">Tacey Stock Room</span>
       </div>
       <div class="dash-nav-actions">
@@ -615,7 +615,7 @@
             </label>
             <input id="new-image" type="hidden">
             <div style="margin-top:0.6rem;">
-              <img id="new-image-preview" src="assets/logo.jpeg" alt="Product preview" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
+              <img id="new-image-preview" src="assets/logo.webp" alt="Product preview" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
             </div>
           </div>
           <div class="form-group" style="grid-column:1/-1;">
@@ -829,7 +829,7 @@
     list.innerHTML = products.map(p => `
       <div class="product-row ${p.inStock ? '' : 'is-out'}" data-pid="${p.id}">
         <label class="photo-pick" title="Change photo">
-          <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" class="product-row-img" onerror="this.src='assets/logo.jpeg'">
+          <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" class="product-row-img" onerror="this.src='assets/logo.webp'">
           <span class="photo-pick-tag">📷 Change</span>
           <input id="img-upload-${p.id}" type="file" accept="image/*" aria-label="Change the photo of ${escHtml(p.name)}" onchange="handleProductImageUpload(this, ${p.id})">
         </label>

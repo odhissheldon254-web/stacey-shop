@@ -5,12 +5,31 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#170d13",
-  "theme_color": "#0b0b12",
+  "background_color": "#fdf8f5",
+  "theme_color": "#d51568",
   "lang": "en-KE",
-  "categories": ["shopping", "lifestyle"],
+  "categories": [
+    "shopping",
+    "lifestyle"
+  ],
   "icons": [
-    { "src": "/assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/assets/logo.jpeg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any" }
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

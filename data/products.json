@@ -6,7 +6,7 @@
     "gender": "Unisex",
     "price": 4500,
     "qty": 8,
-    "image": "assets/product_sneakers.png",
+    "image": "assets/product_sneakers.webp",
     "description": "Bold black streetwear sneakers with neon pink highlights.",
     "tags": [
       "sneakers",
@@ -23,7 +23,7 @@
     "gender": "Female",
     "price": 6800,
     "qty": 5,
-    "image": "assets/product_handbag.png",
+    "image": "assets/product_handbag.webp",
     "description": "Timeless black quilted leather bag with gold chain strap.",
     "tags": [
       "bag",
@@ -40,7 +40,7 @@
     "gender": "Female",
     "price": 8200,
     "qty": 2,
-    "image": "assets/product_dress.png",
+    "image": "assets/product_dress.webp",
     "description": "Deep magenta velvet gown with elegant draping.",
     "tags": [
       "dress",
@@ -57,7 +57,7 @@
     "gender": "Female",
     "price": 5200,
     "qty": 6,
-    "image": "assets/product_heels.png",
+    "image": "assets/product_heels.webp",
     "description": "Hot pink glossy stiletto heels with a sleek metallic base.",
     "tags": [
       "heels",
@@ -74,7 +74,7 @@
     "gender": "Kids",
     "price": 2400,
     "qty": 10,
-    "image": "assets/product_sneakers.png",
+    "image": "assets/product_sneakers.webp",
     "description": "Lightweight, easy-strap sneakers for little trendsetters — comfy for school runs and play dates.",
     "tags": [
       "kids",
