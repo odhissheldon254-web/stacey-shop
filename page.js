@@ -16,8 +16,8 @@
   if (navbar) {
     const tint = () => {
       navbar.style.background = window.scrollY > 60
-        ? 'rgba(11,11,15,0.95)'
-        : 'rgba(11,11,15,0.7)';
+        ? 'rgba(255,255,255,0.97)'
+        : 'rgba(255,255,255,0.86)';
     };
     tint();
     window.addEventListener('scroll', tint, { passive: true });

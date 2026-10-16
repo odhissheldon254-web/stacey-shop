@@ -4457,3 +4457,348 @@ dialog#wishlist-drawer[open]::backdrop {
     .data-table td { padding: 0.7rem 0.85rem; }
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BRIGHT & PLAYFUL THEME (Oct 2026)
+   Warm cream canvas, hot-pink + coral from Stacey's flyer, soft
+   shadows. Sits after everything else and is unlayered, so it wins.
+   A few "dark islands" stay dark on purpose because their text sits
+   on photos: department cards, the fashion-show stage, photo
+   overlays, and the footer band.
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: light;
+  --color-bg: hsl(24 60% 98%);
+  --color-surface: #ffffff;
+  --color-surface-elevated: hsl(340 70% 96%);
+  --color-border: hsl(338 35% 88%);
+  --color-border-glow: hsl(334 82% 46% / 0.25);
+
+  --color-primary: hsl(334 82% 46%);
+  --color-primary-deep: hsl(334 82% 38%);
+  --color-primary-glow: hsl(334 82% 46% / 0.18);
+  --color-primary-hover: hsl(334 82% 40%);
+
+  --color-accent: hsl(10 78% 45%);
+  --color-accent-deep: hsl(10 78% 38%);
+  --color-accent-hover: hsl(10 80% 40%);
+
+  --color-text: hsl(330 35% 13%);
+  --color-text-muted: hsl(330 12% 38%);
+  --color-text-dark: #ffffff;
+
+  --color-success: hsl(150 60% 30%);
+  --color-error: hsl(354 72% 45%);
+
+  --shadow-soft: 0 12px 32px -12px hsl(334 50% 30% / 0.18);
+  --shadow-card: 0 2px 10px -2px hsl(334 40% 30% / 0.10);
+  --shadow-card-hover: 0 18px 36px -14px hsl(334 50% 30% / 0.28);
+  --shadow-glow: 0 6px 18px -6px hsl(334 82% 46% / 0.45);
+  --shadow-accent-glow: 0 6px 18px -6px hsl(10 78% 45% / 0.35);
+
+  --tab-bar-h: 64px;
+}
+
+body {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(ellipse 90% 50% at 50% -10%, hsl(334 90% 85% / 0.45) 0%, transparent 60%),
+    radial-gradient(circle at 95% 30%, hsl(18 95% 85% / 0.35) 0%, transparent 40%),
+    radial-gradient(circle at 0% 70%, hsl(334 90% 88% / 0.30) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+::selection { background: hsl(334 82% 46% / 0.18); color: var(--color-text); }
+
+/* ── Dark islands keep the original night palette ───────────── */
+.dept-card-overlay, .show-stage, .instagram-overlay, .footer, .curtain {
+  --color-text: hsl(36 30% 96%);
+  --color-text-muted: hsl(330 15% 78%);
+  --color-primary: hsl(334 90% 68%);
+  --color-accent: hsl(28 90% 70%);
+  --color-border: hsl(330 18% 32% / 0.7);
+  --color-surface: hsl(328 25% 12%);
+  --color-surface-elevated: hsl(326 22% 17%);
+  color-scheme: dark;
+}
+.footer {
+  background: linear-gradient(180deg, hsl(330 40% 14%), hsl(330 45% 9%));
+  color: var(--color-text);
+  border-top: 0;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.navbar {
+  background: hsl(0 0% 100% / 0.86);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 0 hsl(0 0% 100% / 0.6), 0 6px 20px -16px hsl(334 50% 30% / 0.4);
+}
+.nav-brand-text {
+  background: linear-gradient(120deg, var(--color-text) 40%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.nav-logo-img { box-shadow: none; }
+.cart-toggle, .wishlist-nav-btn { background: var(--color-surface); }
+.mobile-menu-btn span { background: var(--color-text); }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), hsl(350 85% 52%));
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-primary-hover), hsl(350 85% 46%));
+  box-shadow: 0 10px 24px -8px hsl(334 82% 46% / 0.6);
+}
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: hsl(334 82% 46% / 0.35);
+}
+.product-card-btn {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: transparent;
+  border-radius: 999px;
+}
+.product-card-btn:hover { background: var(--color-primary-hover); color: #fff; }
+
+/* ── Hero ────────────────────────────────────────────────────── */
+.hero {
+  background:
+    radial-gradient(circle at 15% 20%, hsl(334 95% 88% / 0.65), transparent 45%),
+    radial-gradient(circle at 85% 75%, hsl(18 100% 86% / 0.6), transparent 45%);
+}
+.hero-background { opacity: 0.07; filter: blur(3px) grayscale(100%); }
+.hero-glow-blob { opacity: 0.35; }
+.hero-badge {
+  background: hsl(334 82% 46% / 0.08);
+  box-shadow: none;
+}
+.hero-title {
+  background: linear-gradient(104deg, var(--color-text) 0%, var(--color-text) 55%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.hero-brand-img { box-shadow: 0 30px 60px -20px hsl(334 60% 25% / 0.45); }
+
+/* ── Cards & panels: white, soft shadows ─────────────────────── */
+.highlights-card, .step-card, .testimonial-card, .analytics-card, .donut-card {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.highlight-icon, .shelf-icon {
+  background: hsl(334 82% 46% / 0.08);
+  color: var(--color-primary);
+  border-color: transparent;
+}
+.catalog-filters, .glass-panel { background: hsl(0 0% 100% / 0.85); }
+
+.product-card {
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+  border-color: hsl(338 35% 92%);
+}
+.product-card:hover {
+  border-color: hsl(334 82% 46% / 0.3);
+  box-shadow: var(--shadow-card-hover);
+}
+.product-img-container { background: hsl(340 60% 97%); }
+.product-badge {
+  background: hsl(0 0% 100% / 0.92);
+  color: var(--color-primary);
+  border-color: transparent;
+  border-radius: 999px;
+}
+.product-price { color: var(--color-text); }
+
+dialog { box-shadow: 0 30px 70px -20px hsl(330 50% 20% / 0.45), 0 0 0 1px var(--color-border); }
+dialog[open]::backdrop,
+dialog#cart-drawer[open]::backdrop,
+dialog#wishlist-drawer[open]::backdrop { background-color: hsl(330 40% 15% / 0.45); }
+.nav-drawer-backdrop { background: hsl(330 40% 15% / 0.45); }
+.option-selector:hover:not(:has(input:checked)),
+.qty-btn:hover,
+.quiz-option:hover { background-color: hsl(334 82% 46% / 0.07); }
+.cart-item, .wishlist-item { border-bottom-color: var(--color-border); }
+.wishlist-btn { background: hsl(0 0% 100% / 0.9); color: var(--color-primary); }
+
+/* Gradient headlines that faded to white would vanish on cream. */
+.flyer-title, .dept-hero-title {
+  background: linear-gradient(110deg, var(--color-text) 30%, var(--color-primary) 70%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.flyer-grid { background: linear-gradient(135deg, var(--color-surface), hsl(340 70% 97%)); }
+.flyer-img-frame { box-shadow: var(--shadow-soft); }
+.text-glow-accent { text-shadow: none; }
+
+/* Ticker becomes a bold pink ribbon. */
+.ticker {
+  background: linear-gradient(90deg, var(--color-primary), hsl(350 85% 52%), var(--color-accent));
+  border: 0;
+}
+.ticker-track span, .ticker-track span:nth-child(odd) { color: #fff; }
+
+/* Quick-answers chat, toasts, content pages */
+.ai-chat-window { background: hsl(0 0% 100% / 0.97); box-shadow: 0 24px 60px -16px hsl(330 50% 20% / 0.45); }
+.ai-chat-header { background: linear-gradient(135deg, var(--color-primary), hsl(350 85% 52%)); color: #fff; }
+.ai-chat-header * { color: #fff; }
+.ai-chips, .ai-input-bar { background: hsl(340 60% 97%); }
+#shop-toast { box-shadow: var(--shadow-soft); }
+.page-hero {
+  background:
+    radial-gradient(ellipse 70% 100% at 50% 0%, hsl(334 95% 90% / 0.7), transparent 70%),
+    radial-gradient(circle at 90% 90%, hsl(18 100% 88% / 0.5), transparent 50%);
+}
+.page-cta {
+  background:
+    radial-gradient(ellipse 80% 120% at 50% 0%, hsl(334 95% 90% / 0.7), transparent 70%);
+}
+.data-table tbody tr:hover { background: hsl(334 82% 46% / 0.05); }
+
+/* ═══════════════════════════════════════════════════════════════
+   PHONES: app-style layout
+   ═══════════════════════════════════════════════════════════════ */
+.tab-bar { display: none; }
+
+@media (max-width: 768px) {
+  /* Bottom tab bar replaces the floating WhatsApp button. */
+  .tab-bar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 95;
+    height: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: hsl(0 0% 100% / 0.94);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -8px 24px -18px hsl(330 50% 20% / 0.5);
+  }
+  .tab-bar-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-bar-item svg { width: 22px; height: 22px; transition: transform 0.15s ease; }
+  .tab-bar-item:active svg { transform: scale(0.88); }
+  .tab-bar-item[aria-current="page"] { color: var(--color-primary); }
+  .tab-bar-wa { color: hsl(142 64% 32%); }
+  .tab-bar-badge {
+    position: absolute;
+    top: 7px;
+    left: calc(50% + 6px);
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+  }
+  .tab-bar-badge:empty, .tab-bar-badge[data-zero] { display: none; }
+
+  body { padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px)); }
+  .wa-sticky-btn { display: none; }
+  #tacey-ai-widget { bottom: calc(var(--tab-bar-h) + 14px); right: 14px; }
+  #shop-toast { bottom: calc(var(--tab-bar-h) + 16px); }
+
+  /* Header: one tidy row. Wishlist and bag live in the tab bar now. */
+  .navbar { padding: 0.65rem 1rem; }
+  .nav-actions .wishlist-nav-btn,
+  .nav-actions .cart-toggle,
+  .nav-actions .btn-nav-wa { display: none; }
+  .nav-links { gap: 0.5rem; padding-top: 0.15rem; }
+  .nav-link {
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: hsl(334 82% 46% / 0.07);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  .nav-link::after { display: none; }
+  .nav-link.active, .nav-link[aria-current="page"] { background: var(--color-primary); color: #fff; }
+
+  /* Hero: get to the products fast. */
+  .hero { padding: 2.25rem 1.1rem 2rem; }
+  .hero-title { font-size: clamp(2.1rem, 1.4rem + 4vw, 2.8rem); margin-bottom: 0.6rem; }
+  .hero-badge { margin-bottom: 0.9rem; font-size: 0.72rem; }
+  .hero-slogan { margin-bottom: 0.8rem; font-size: 1.1rem; }
+  .hero-desc { font-size: 0.95rem; margin-bottom: 1.4rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hero-actions { gap: 0.6rem; }
+  .hero-actions .btn { flex: 1 1 0; min-height: 48px; padding-inline: 0.8rem; }
+  .hero-brand { max-width: 220px; margin: 1.5rem auto 0; }
+
+  /* Highlights become a swipeable row instead of three stacked cards. */
+  .highlights {
+    margin-top: 0;
+    padding: 1rem 1.1rem 1.5rem;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .highlights::-webkit-scrollbar { display: none; }
+  .highlights-card { flex: 0 0 78%; scroll-snap-align: start; }
+
+  /* Two products per row, everywhere. */
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .shelf-track { gap: 0.75rem; mask-image: none; }
+  .shelf-track .product-card { width: calc((100vw - 2.2rem - 0.75rem) / 2.15); }
+  .product-info { padding: 0.7rem 0.75rem 0.85rem; gap: 0.3rem; }
+  .product-title { font-size: 0.95rem; }
+  .product-cat { font-size: 0.66rem; }
+  .product-price { font-size: 1rem; }
+  .product-price::before { font-size: 0.7rem; }
+  .product-price-row { flex-wrap: wrap; gap: 0.4rem; }
+  .product-card-btn { padding: 0.45rem 0.8rem; font-size: 0.8rem; min-height: 36px; }
+  .product-badge { top: 0.5rem; left: 0.5rem; padding: 0.2rem 0.55rem; font-size: 0.62rem; }
+  .product-card:hover { transform: none; }
+
+  .shelf-title { font-size: 1.25rem; }
+  .shelf-icon { width: 36px; height: 36px; font-size: 1.05rem; border-radius: 10px; }
+}
+
+@media (max-width: 380px) {
+  .nav-brand-text { font-size: 1rem; }
+}
+
+/* Product badges: positions live here, not inline in app.js. */
+.product-badge-featured { left: auto; right: 2.75rem; color: var(--color-primary); }
+.product-badge-bottom { top: auto; bottom: 0.75rem; left: 0.75rem; }
+.product-badge-out { color: var(--color-error); }
+
+@media (max-width: 768px) {
+  /* Two badges don't fit side by side on a half-width card. Featured wins;
+     the department page already says who it's for. */
+  .product-img-container:has(.product-badge-featured) .product-badge-gender { display: none; }
+  .product-badge-featured { left: 0.5rem; right: auto; }
+  .product-badge-bottom { bottom: 0.5rem; left: 0.5rem; }
+
+  /* Smaller quick-answers bubble so it covers less of the page. */
+  .ai-bubble-btn { padding: 0.8rem; }
+  .ai-bubble-btn svg { width: 20px; height: 20px; }
+  .ai-pulse-ring { display: none; }
+
+  /* The flyer is lovely but was a full screen of scrolling on a phone. */
+  .hero-brand { max-width: 170px; }
+}
+
+@media (max-width: 768px) {
+  /* Same shape on every card: price, then a full-width thumb-sized button. */
+  .product-price-row { flex-direction: column; align-items: stretch; margin-top: auto; }
+  .product-card-btn { width: 100%; min-height: 40px; }
+}

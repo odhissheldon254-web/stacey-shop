@@ -21,7 +21,7 @@ const DOMAIN = 'tacey.odhis.co.ke';
 const PUBLIC_FILES = [
   'index.html', 'shop.html', 'about.html', 'contact.html', 'delivery.html',
   'faq.html', 'size-guide.html', '404.html', 'admin.html',
-  'index.css', 'app.js', 'store.js', 'page.js',
+  'index.css', 'app.js', 'store.js', 'page.js', 'tabbar.js',
   'robots.txt', 'sitemap.xml', 'site.webmanifest'
 ];
 const PUBLIC_DIRS = ['assets'];

@@ -300,6 +300,26 @@
       border: 1px solid var(--border);
     }
 
+    /* Tap the photo to change it. */
+    .photo-pick { position: relative; display: block; cursor: pointer; }
+    .photo-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .photo-pick-tag {
+      position: absolute; inset: auto 0 0 0;
+      font-size: 0.62rem; font-weight: 700; text-align: center;
+      padding: 0.2rem 0; border-radius: 0 0 10px 10px;
+      background: rgba(0,0,0,0.6); color: #fff;
+    }
+    .photo-pick:focus-within .product-row-img { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .photo-pick.busy .product-row-img { opacity: 0.4; }
+
+    .btn-photo {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      width: 100%; min-height: 52px; border-radius: 12px; cursor: pointer;
+      border: 2px dashed var(--primary); color: var(--primary);
+      font-weight: 700; font-size: 1rem; background: transparent;
+    }
+    .btn-photo input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
     .product-row-fields { display: flex; flex-direction: column; gap: 0.6rem; }
 
     .field-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
@@ -588,9 +608,12 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="new-image-file">Product Image</label>
-            <input id="new-image-file" type="file" class="field-input" accept="image/*">
-            <input id="new-image" class="field-input" placeholder="assets/my_product.jpg" style="margin-top:0.5rem;">
+            <span class="form-label">Product photo</span>
+            <label class="btn-photo">
+              📷 Add photo
+              <input id="new-image-file" type="file" accept="image/*">
+            </label>
+            <input id="new-image" type="hidden">
             <div style="margin-top:0.6rem;">
               <img id="new-image-preview" src="assets/logo.jpeg" alt="Product preview" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
             </div>
@@ -805,7 +828,11 @@
 
     list.innerHTML = products.map(p => `
       <div class="product-row ${p.inStock ? '' : 'is-out'}" data-pid="${p.id}">
-        <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" class="product-row-img" onerror="this.src='assets/logo.jpeg'">
+        <label class="photo-pick" title="Change photo">
+          <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" class="product-row-img" onerror="this.src='assets/logo.jpeg'">
+          <span class="photo-pick-tag">📷 Change</span>
+          <input id="img-upload-${p.id}" type="file" accept="image/*" aria-label="Change the photo of ${escHtml(p.name)}" onchange="handleProductImageUpload(this, ${p.id})">
+        </label>
         <div class="product-row-fields">
           <input class="field-input" value="${escHtml(p.name)}" data-field="name" placeholder="Product name">
           <div class="field-row">
@@ -833,7 +860,7 @@
             </label>
           </div>
           <details class="row-more">
-            <summary>More details (description, tags, image)</summary>
+            <summary>More details (description, tags)</summary>
             <div class="form-group" style="margin-top:0.5rem;">
               <label class="form-label" for="desc-${p.id}">Description</label>
               <textarea id="desc-${p.id}" class="field-input" rows="2" data-field="description" style="resize:vertical;">${escHtml(p.description || '')}</textarea>
@@ -842,11 +869,7 @@
               <label class="form-label" for="tags-${p.id}">Tags (comma-separated)</label>
               <input id="tags-${p.id}" class="field-input" value="${escHtml((p.tags || []).join(', '))}" data-field="tags">
             </div>
-            <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label" for="img-upload-${p.id}">Upload New Image</label>
-              <input id="img-upload-${p.id}" type="file" class="field-input" accept="image/*" onchange="handleProductImageUpload(this, ${p.id})">
-              <input class="field-input img-input" value="${escHtml(p.image)}" data-field="image" placeholder="assets/image.png" style="margin-top:0.5rem;">
-            </div>
+            <input type="hidden" value="${escHtml(p.image)}" data-field="image">
           </details>
         </div>
         <div class="product-row-actions">
@@ -999,18 +1022,25 @@
     if (!file) return;
     const row = document.querySelector(`.product-row[data-pid="${productId}"]`);
     if (!row) return;
+    const picker = input.closest('.photo-pick');
+    picker?.classList.add('busy');
     try {
       const dataUrl = await compressImage(file);
-      showToast(`⏫ Uploading photo (${dataUrlKb(dataUrl)} KB)…`, 'success');
+      showToast('⏫ Uploading photo…', 'success');
       const url = await uploadPhoto(dataUrl);
-      const imageInput = row.querySelector('[data-field="image"]');
-      const preview = row.querySelector('.product-row-img');
-      if (imageInput) imageInput.value = url;
-      if (preview) preview.src = url;
-      showToast('🖼 Photo uploaded — click Save to keep it', 'success');
+      const p = products.find(x => x.id === productId);
+      const before = p?.image;
+      if (p) p.image = url;
+      // Saved straight away: a new photo is never left waiting for a
+      // Save button she might not notice.
+      if (p && !(await persist(`📷 Photo uploaded and saved for "${p.name}"`))) p.image = before;
+      renderProductList();
     } catch (error) {
       console.error(error);
       showToast(`⚠️ ${error.message || 'Could not upload this image'}`, 'error');
+    } finally {
+      picker?.classList.remove('busy');
+      input.value = '';
     }
   };
 
@@ -1032,7 +1062,7 @@
       $('new-image-preview').src = dataUrl;
       showToast(`⏫ Uploading photo (${dataUrlKb(dataUrl)} KB)…`, 'success');
       $('new-image').value = await uploadPhoto(dataUrl);
-      showToast('🖼 Photo uploaded', 'success');
+      showToast('🖼 Photo uploaded — fill in the rest and tap Save', 'success');
     } catch (error) {
       console.error(error);
       showToast(`⚠️ ${error.message || 'Could not upload the selected image'}`, 'error');

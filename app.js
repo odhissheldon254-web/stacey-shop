@@ -223,10 +223,10 @@ function productCardHTML(p) {
              aria-label="View details for ${p.name}" style="${!p.inStock ? 'opacity:0.5;' : ''}">
       <div class="product-img-container">
         <img src="${p.image}" alt="${p.name}" class="product-img" loading="lazy">
-        <span class="product-badge">${p.gender}</span>
-        ${p.featured ? `<span class="product-badge" style="left:auto;right:2.75rem;color:var(--color-primary);border-color:var(--color-primary-glow);">★ Featured</span>` : ''}
-        ${!p.inStock ? `<span class="product-badge" style="top:auto;bottom:0.75rem;left:0.75rem;color:var(--color-error);">Out of Stock</span>` : ''}
-        ${p.inStock && p.qty <= 3 ? `<span class="product-badge low-stock-badge" style="top:auto;bottom:0.75rem;left:0.75rem;">🔥 Only ${p.qty} left</span>` : ''}
+        <span class="product-badge product-badge-gender">${p.gender}</span>
+        ${p.featured ? `<span class="product-badge product-badge-featured">★ Featured</span>` : ''}
+        ${!p.inStock ? `<span class="product-badge product-badge-bottom product-badge-out">Out of Stock</span>` : ''}
+        ${p.inStock && p.qty <= 3 ? `<span class="product-badge product-badge-bottom low-stock-badge">🔥 Only ${p.qty} left</span>` : ''}
         <button class="wishlist-btn ${wishlisted ? 'wishlisted' : ''}" data-id="${p.id}" aria-label="${wishlisted ? 'Remove from' : 'Add to'} wishlist" aria-pressed="${wishlisted}">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="${wishlisted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </button>
@@ -1559,8 +1559,8 @@ function initNavbar() {
   if (!navbar) return;
   window.addEventListener('scroll', () => {
     navbar.style.background = window.scrollY > 60
-      ? 'rgba(11,11,15,0.95)'
-      : 'rgba(11,11,15,0.7)';
+      ? 'rgba(255,255,255,0.97)'
+      : 'rgba(255,255,255,0.86)';
   }, { passive: true });
 }
 
@@ -1685,6 +1685,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Arriving from an info page's bag icon (/#cart) — open the drawer.
   if (location.hash === '#cart') {
     openCart();
+    history.replaceState(null, '', location.pathname);
+  }
+  if (location.hash === '#saved') {
+    openWishlist();
     history.replaceState(null, '', location.pathname);
   }
 
