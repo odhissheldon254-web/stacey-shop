@@ -101,9 +101,6 @@
     "inLanguage": "en-KE"
   }
   </script>
-  
-  <!-- Preload Critical Image Asset -->
-  <link rel="preload" href="assets/hero_bg.webp" as="image">
 </head>
 <body>
 
@@ -122,9 +119,6 @@
       <a href="/contact" class="nav-link nav-link-info">Contact</a>
     </nav>
     <div class="nav-actions">
-      <button class="btn btn-secondary nav-quiz-btn" id="header-quiz-btn" aria-label="Start Style Quiz">
-        <span>Style Matcher</span>
-      </button>
       <!-- Wishlist Toggle -->
       <button class="wishlist-nav-btn" id="wishlist-toggle-btn" aria-label="View wishlist" aria-expanded="false" aria-controls="wishlist-drawer">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -156,126 +150,98 @@
       </button>
     </div>
     <div class="nav-drawer-links">
-      <a href="/women" class="nav-drawer-link">👠 Women</a>
-      <a href="/men" class="nav-drawer-link">👟 Men</a>
-      <a href="/kids" class="nav-drawer-link">🧸 Kids</a>
+      <a href="/women" class="nav-drawer-link">Women</a>
+      <a href="/men" class="nav-drawer-link">Men</a>
+      <a href="/kids" class="nav-drawer-link">Kids</a>
       <a href="#how-it-works" class="nav-drawer-link" id="nav-drawer-how">ℹ️ How It Works</a>
       <div class="nav-drawer-divider"></div>
-      <button class="nav-drawer-link" id="nav-drawer-quiz-btn">✨ Style Matcher Quiz</button>
-      <div class="nav-drawer-divider"></div>
-      <a href="/about" class="nav-drawer-link">✦ Our Story</a>
-      <a href="/delivery" class="nav-drawer-link">🚚 Delivery &amp; Payment</a>
-      <a href="/size-guide" class="nav-drawer-link">📏 Size Guide</a>
-      <a href="/faq" class="nav-drawer-link">❔ FAQs</a>
-      <a href="/contact" class="nav-drawer-link">✉️ Contact</a>
+      <a href="/about" class="nav-drawer-link">Our Story</a>
+      <a href="/delivery" class="nav-drawer-link">Delivery &amp; Payment</a>
+      <a href="/size-guide" class="nav-drawer-link">Size Guide</a>
+      <a href="/faq" class="nav-drawer-link">FAQs</a>
+      <a href="/contact" class="nav-drawer-link">Contact</a>
     </div>
     <div class="nav-drawer-footer">
       <a href="https://wa.me/254702179011" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer" style="justify-content:center;">
-        💬 Chat with Stacey
+        Chat with Stacey
       </a>
     </div>
   </nav>
 
   <main>
-    <!-- Hero Banner Section -->
-    <section class="hero" id="home" aria-label="Welcome banner">
-      <div class="hero-background"></div>
-      <div class="hero-glow-blob"></div>
-      <div class="hero-content">
-        <span class="hero-badge">Curated Collection</span>
-        <h1 class="hero-title"><span class="accent-word">Tacey Collections</span> — Curated Fashion for Every Occasion</h1>
-        <p class="hero-slogan">Style that speaks for you</p>
-        <p class="hero-desc">
-          Discover premium footwear, designer bags, and elegant clothing at Tacey Collections in Kenya. Browse a refined edit of everyday essentials and occasion-ready pieces, then order with ease through WhatsApp.
-        </p>
-        <div class="hero-actions">
-          <a href="#catalog" class="btn btn-primary">
-            <span>Shop Collection</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </a>
-          <button class="btn btn-secondary" id="hero-quiz-btn">
-            <span>Find My Style</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </button>
+    <!-- Opening: who we are, then straight to the stock -->
+    <section class="home-hero" id="home" aria-labelledby="home-title">
+      <div class="home-hero-text">
+        <p class="eyebrow">Nairobi boutique</p>
+        <h1 class="home-title" id="home-title">Style that speaks <em>for you.</em></h1>
+        <p class="home-hero-sub">Handpicked pieces for women, men and kids. Order on WhatsApp and pay by M-Pesa once Stacey confirms your item.</p>
+        <div class="home-hero-actions">
+          <a href="#new-arrivals" class="btn btn-primary">Shop new arrivals</a>
+          <a href="https://wa.me/254702179011" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Chat with Stacey</a>
         </div>
       </div>
-      <div class="hero-brand">
-        <img src="assets/brand_flyer.webp" alt="Tacey Collections official brand — Style that speaks for you. Bags, footwear and clothes." class="hero-brand-img">
+
+      <div class="promo" aria-roledescription="carousel" aria-label="About Tacey Collections">
+        <div class="promo-track" id="promo-track" tabindex="0">
+          <figure class="promo-slide promo-flyer" aria-roledescription="slide" aria-label="1 of 3">
+            <img src="assets/brand_flyer.webp" width="800" height="1200" alt="Tacey Collections flyer: bags, footwear and clothes for men and women. WhatsApp +254 702 179011, Instagram @tacey_collections.">
+          </figure>
+          <div class="promo-slide promo-card promo-delivery" aria-roledescription="slide" aria-label="2 of 3">
+            <p class="promo-kicker">Delivery</p>
+            <h2 class="promo-title">Across Kenya, or free pickup in Nairobi</h2>
+            <p class="promo-text">The delivery fee shows in your bag before you send the order.</p>
+            <a class="promo-link" href="/delivery">Delivery rates</a>
+          </div>
+          <div class="promo-slide promo-card promo-pay" aria-roledescription="slide" aria-label="3 of 3">
+            <p class="promo-kicker">Paying</p>
+            <h2 class="promo-title">Pay only after Stacey confirms</h2>
+            <p class="promo-text">M-Pesa paybill, with the total agreed on WhatsApp first. No card details, no surprises.</p>
+            <a class="promo-link" href="/faq">How paying works</a>
+          </div>
+        </div>
+        <div class="promo-dots" id="promo-dots">
+          <button type="button" class="promo-dot" aria-label="Show slide 1"></button>
+          <button type="button" class="promo-dot" aria-label="Show slide 2"></button>
+          <button type="button" class="promo-dot" aria-label="Show slide 3"></button>
+        </div>
       </div>
     </section>
 
-    <!-- Boutique ticker strip -->
-    <div class="ticker" aria-hidden="true">
-      <div class="ticker-track">
-        <span>✦ Style that speaks for you</span><span>✦ New drops weekly</span><span>✦ M-Pesa payments</span><span>✦ Delivery across Kenya</span><span>✦ Free self-pickup</span><span>✦ Chat direct with Stacey</span>
-        <span>✦ Style that speaks for you</span><span>✦ New drops weekly</span><span>✦ M-Pesa payments</span><span>✦ Delivery across Kenya</span><span>✦ Free self-pickup</span><span>✦ Chat direct with Stacey</span>
+    <!-- Newest stock first -->
+    <section class="home-section" id="new-arrivals" aria-labelledby="new-heading">
+      <div class="home-section-head">
+        <h2 class="home-h2" id="new-heading">New arrivals</h2>
+        <a class="see-all" href="#catalog">See everything</a>
       </div>
-    </div>
-
-    <section class="highlights" aria-label="Highlights of Tacey Collections">
-      <article class="highlights-card reveal">
-        <span class="highlight-icon">✦</span>
-        <div>
-          <h3>Curated with intention</h3>
-          <p>Each piece is chosen to feel effortless, elevated, and ready for real life.</p>
-        </div>
-      </article>
-      <article class="highlights-card reveal">
-        <span class="highlight-icon">☛</span>
-        <div>
-          <h3>Instant WhatsApp ordering</h3>
-          <p>Browse, enquire, and order in one smooth flow with Stacey’s direct support.</p>
-        </div>
-      </article>
-      <article class="highlights-card reveal">
-        <span class="highlight-icon">↺</span>
-        <div>
-          <h3>Easy pickup and delivery</h3>
-          <p>Flexible options make shopping feel calm, simple, and convenient for every customer.</p>
-        </div>
-      </article>
+      <div class="shelf-track new-arrivals-track" id="new-arrivals-track" role="group" aria-label="New arrivals"></div>
     </section>
 
-    <!-- Shop by Department -->
-    <section class="dept-section reveal" id="departments" aria-labelledby="dept-heading">
-      <div class="section-header">
-        <h2 class="section-title" id="dept-heading">Shop by Department</h2>
-        <p class="section-desc">Three curated worlds, each with its own shelves. Step into yours.</p>
+    <section class="home-section" id="departments" aria-labelledby="dept-heading">
+      <div class="home-section-head">
+        <h2 class="home-h2" id="dept-heading">Shop by department</h2>
       </div>
-      <div class="dept-cards">
-        <a class="dept-card" href="/women">
-          <img src="assets/product_heels.webp" alt="" class="dept-card-img" loading="lazy" aria-hidden="true">
-          <div class="dept-card-overlay">
-            <span class="dept-card-emoji" aria-hidden="true">👠</span>
-            <h3>Women</h3>
-            <p>Heels, gowns, bags &amp; everyday glam</p>
-            <span class="dept-card-cta">Browse the shelves →</span>
-          </div>
+      <div class="dept-tiles">
+        <a class="dept-tile dept-tile-women" href="/women">
+          <span class="dept-tile-name">Women</span>
+          <span class="dept-tile-meta">Heels, bags, dresses</span>
+          <span class="dept-tile-count" data-dept-count="women"></span>
         </a>
-        <a class="dept-card" href="/men">
-          <img src="assets/product_sneakers.webp" alt="" class="dept-card-img" loading="lazy" aria-hidden="true">
-          <div class="dept-card-overlay">
-            <span class="dept-card-emoji" aria-hidden="true">👟</span>
-            <h3>Men</h3>
-            <p>Clean kicks, sharp fits &amp; streetwear</p>
-            <span class="dept-card-cta">Browse the shelves →</span>
-          </div>
+        <a class="dept-tile dept-tile-men" href="/men">
+          <span class="dept-tile-name">Men</span>
+          <span class="dept-tile-meta">Sneakers, shoes, streetwear</span>
+          <span class="dept-tile-count" data-dept-count="men"></span>
         </a>
-        <a class="dept-card dept-card-kids" href="/kids">
-          <div class="dept-card-overlay">
-            <span class="dept-card-emoji" aria-hidden="true">🧸</span>
-            <h3>Kids</h3>
-            <p>Playful, comfy picks for little trendsetters</p>
-            <span class="dept-card-cta">Browse the shelves →</span>
-          </div>
+        <a class="dept-tile dept-tile-kids" href="/kids">
+          <span class="dept-tile-name">Kids</span>
+          <span class="dept-tile-meta">Comfy picks for little ones</span>
+          <span class="dept-tile-count" data-dept-count="kids"></span>
         </a>
       </div>
     </section>
 
-    <!-- Catalog Section -->
     <section class="catalog-section" id="catalog" aria-labelledby="catalog-heading">
       <div class="catalog-controls">
-        <h2 class="sr-only" id="catalog-heading">Product Catalog</h2>
+        <h2 class="home-h2" id="catalog-heading">All pieces</h2>
         <div class="catalog-filters">
           <!-- Category Tabs (rebuilt dynamically from live catalog) -->
           <div class="filter-tabs" role="tablist" aria-label="Filter by category" id="category-tablist">
@@ -297,7 +263,7 @@
           <!-- Search Input -->
           <div class="catalog-search-wrap">
             <label for="product-search" class="sr-only">Search products</label>
-            <input type="search" id="product-search" class="search-input" placeholder="Search by name, tags...">
+            <input type="search" id="product-search" class="search-input" placeholder="Search heels, bags, sneakers…">
           </div>
         </div>
       </div>
@@ -337,10 +303,10 @@
         </article>
       </div>
       <div class="link-tiles how-it-works-links">
-        <a class="link-tile" href="/delivery"><span class="link-tile-emoji" aria-hidden="true">🚚</span> Delivery rates &amp; payment</a>
-        <a class="link-tile" href="/size-guide"><span class="link-tile-emoji" aria-hidden="true">📏</span> Find your size</a>
-        <a class="link-tile" href="/faq"><span class="link-tile-emoji" aria-hidden="true">❔</span> Returns &amp; FAQs</a>
-        <a class="link-tile" href="/contact"><span class="link-tile-emoji" aria-hidden="true">✉️</span> Contact Stacey</a>
+        <a class="link-tile" href="/delivery">Delivery rates &amp; payment</a>
+        <a class="link-tile" href="/size-guide">Find your size</a>
+        <a class="link-tile" href="/faq">Returns &amp; FAQs</a>
+        <a class="link-tile" href="/contact">Contact Stacey</a>
       </div>
     </section>
 
@@ -355,92 +321,23 @@
       </div>
     </section>
 
-    <!-- Lookbook Showcase -->
-    <section class="social-showcase" id="lookbook" aria-labelledby="showcase-title">
-      <div class="showcase-container">
-        <div class="section-header">
-          <h2 class="section-title" id="showcase-title">The Tacey Lookbook</h2>
-          <p class="section-desc">Style inspiration from our latest pieces. Follow @tacey_collections on Instagram for new arrivals and drops.</p>
-        </div>
-        <div class="instagram-grid">
-          <!-- Card 1: Bag -->
-          <div class="instagram-card">
-            <img src="assets/product_handbag.webp" alt="Black quilted leather luxury bag spotted in a boutique" class="instagram-img">
-            <div class="instagram-overlay">
-              <span class="instagram-handle">@tacey_collections</span>
-              <p>Timeless classic luxury. The absolute go-to for standard dinners and formal outings.</p>
-            </div>
-          </div>
-          <!-- Card 2: Sneakers -->
-          <div class="instagram-card">
-            <img src="assets/product_sneakers.webp" alt="Black and neon pink high-top sneakers on a street style model" class="instagram-img">
-            <div class="instagram-overlay">
-              <span class="instagram-handle">@tacey_collections</span>
-              <p>Bold streetwear, unmatched comfort. Add that energetic punch of neon to your street look.</p>
-            </div>
-          </div>
-          <!-- Card 3: Dress -->
-          <div class="instagram-card">
-            <img src="assets/product_dress.webp" alt="Deep magenta velvet draped dress on display" class="instagram-img">
-            <div class="instagram-overlay">
-              <span class="instagram-handle">@tacey_collections</span>
-              <p>Elegance refined. Turn heads at every gala and event with velvet drapes that flow beautifully.</p>
-            </div>
-          </div>
-          <!-- Card 4: Heels -->
-          <div class="instagram-card">
-            <img src="assets/product_heels.webp" alt="Vibrant neon pink designer heels on a glossy showroom floor" class="instagram-img">
-            <div class="instagram-overlay">
-              <span class="instagram-handle">@tacey_collections</span>
-              <p>Hot pink glow. Perfect companion for night outs and whenever you want style that truly speaks.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Instagram: where new pieces appear first -->
+    <section class="ig-band" aria-labelledby="ig-heading">
+      <h2 class="ig-title" id="ig-heading">New pieces land on Instagram first</h2>
+      <p class="ig-text">Stacey posts fresh stock, restocks and outfit ideas at @tacey_collections.</p>
+      <a class="btn btn-secondary" href="https://instagram.com/tacey_collections" target="_blank" rel="noopener noreferrer">Follow @tacey_collections</a>
     </section>
 
-    <!-- Original Flyer / About Section -->
-    <section class="flyer-trust-section" id="about" aria-labelledby="about-heading">
-      <div class="flyer-grid">
-        <div class="flyer-text-side">
-          <span class="flyer-badge">Official Flyer Info</span>
-          <h2 class="flyer-title" id="about-heading">Style That Speaks For You</h2>
-          <p class="flyer-slogan">BAGS | FOOTWEARS | CLOTHES</p>
-          <p class="flyer-desc">
-            Tacey Collections is a premier fashion boutique serving both male and female fashion lovers with top-tier, hand-selected pieces. Every order is handled personally by Stacey — you talk directly with the owner, so pricing is transparent, requests are heard, and delivery is arranged around you.
-          </p>
-          <div class="flyer-contacts">
-            <div class="contact-item">
-              <span class="contact-icon wa">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-                </svg>
-              </span>
-              <span>WhatsApp: <strong>+254 702179011</strong></span>
-            </div>
-            <div class="contact-item">
-              <span class="contact-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                </svg>
-              </span>
-              <span>Instagram: <strong>@tacey_collections</strong></span>
-            </div>
-          </div>
-          <div style="margin-top: 1.5rem;">
-            <a href="https://wa.me/254702179011" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer">
-              <span>Chat Direct with Stacey</span>
-            </a>
-          </div>
-        </div>
-        <div class="flyer-img-side">
-          <div class="flyer-img-frame">
-            <img src="assets/brand_flyer.webp" alt="Tacey Collections Original Brand Flyer. Style that speaks for you. BAGS, FOOTWEARS, CLOTHES. Contact: +254702179011" class="flyer-original-img">
-          </div>
-        </div>
-      </div>
+    <!-- About -->
+    <section class="home-about" id="about" aria-labelledby="about-heading">
+      <h2 class="home-h2" id="about-heading">About the boutique</h2>
+      <p>Tacey Collections is Stacey's small Nairobi boutique for bags, footwear and clothing, for men, women and kids. Every order goes to Stacey directly on WhatsApp, so you can ask about sizes, colours or a photo in daylight before you pay.</p>
+      <ul class="home-about-facts">
+        <li><strong>WhatsApp</strong> <a href="https://wa.me/254702179011" target="_blank" rel="noopener noreferrer">+254 702 179011</a></li>
+        <li><strong>Instagram</strong> <a href="https://instagram.com/tacey_collections" target="_blank" rel="noopener noreferrer">@tacey_collections</a></li>
+        <li><strong>Hours</strong> Mon–Sat, 9am–7pm</li>
+      </ul>
+      <a class="text-link" href="/about">Our story</a>
     </section>
   </main>
 
@@ -451,7 +348,7 @@
 
       <div class="footer-col footer-col-brand">
         <a href="/" class="footer-logo" aria-label="Tacey Collections home">Tacey <span>Collections</span></a>
-        <p class="footer-desc">Style that speaks for you. Handpicked footwear, clothing and bags with personal customer care and swift delivery across Kenya.</p>
+        <p class="footer-desc">Style that speaks for you. Handpicked footwear, clothing and bags from a small Nairobi boutique. Delivery across Kenya.</p>
         <div class="footer-socials">
           <a href="https://instagram.com/tacey_collections" target="_blank" rel="noopener noreferrer" class="footer-social-link" aria-label="Follow Tacey Collections on Instagram">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -494,8 +391,7 @@
         <h2 class="footer-col-title" id="footer-about-heading">The Boutique</h2>
         <ul class="footer-links">
           <li><a href="/about">Our Story</a></li>
-          <li><a href="/#testimonials">Customer Reviews</a></li>
-          <li><a href="/#lookbook">The Lookbook</a></li>
+          <li><a href="/#new-arrivals">New Arrivals</a></li>
           <li><a href="https://instagram.com/tacey_collections" target="_blank" rel="noopener noreferrer">Instagram</a></li>
         </ul>
       </nav>
@@ -601,12 +497,12 @@
         </div>
         <label for="delivery-location" class="delivery-label">Select Your Location</label>
         <select id="delivery-location" class="delivery-select">
-          <option value="pickup" data-fee="0">🏪 Self Pickup (Free)</option>
-          <option value="nairobi_cbd" data-fee="150">📍 Nairobi CBD — KES 150</option>
-          <option value="nairobi_suburbs" data-fee="300">🏘️ Nairobi Suburbs (Westlands, Kilimani…) — KES 300</option>
-          <option value="kiambu_thika" data-fee="400">🚗 Kiambu / Thika — KES 400</option>
-          <option value="mombasa_kisumu" data-fee="500">✈️ Mombasa / Kisumu / Nakuru — KES 500</option>
-          <option value="upcountry" data-fee="600">🗺️ Rest of Kenya (Upcountry) — KES 600</option>
+          <option value="pickup" data-fee="0">Self Pickup (Free)</option>
+          <option value="nairobi_cbd" data-fee="150">Nairobi CBD — KES 150</option>
+          <option value="nairobi_suburbs" data-fee="300">Nairobi Suburbs (Westlands, Kilimani…) — KES 300</option>
+          <option value="kiambu_thika" data-fee="400">Kiambu / Thika — KES 400</option>
+          <option value="mombasa_kisumu" data-fee="500">Mombasa / Kisumu / Nakuru — KES 500</option>
+          <option value="upcountry" data-fee="600">Rest of Kenya (Upcountry) — KES 600</option>
         </select>
         <label for="delivery-address" class="delivery-label" id="delivery-address-label" style="margin-top:0.75rem;">Your Doorstep Address</label>
         <textarea id="delivery-address" class="delivery-address-input" rows="2" placeholder="e.g. Ring Road, Kileleshwa, Apt 4B, Nairobi"></textarea>
@@ -634,124 +530,11 @@
     </div>
   </dialog>
 
-  <!-- Style Matcher Quiz Modal Dialog -->
-  <dialog id="quiz-modal" aria-labelledby="quiz-modal-heading">
-    <button class="dialog-close" id="close-quiz-modal" aria-label="Close quiz">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div class="quiz-wizard">
-      <div class="quiz-header">
-        <h2 id="quiz-modal-heading" class="cart-title">Style Matcher</h2>
-        <div class="quiz-progress-bar">
-          <div class="quiz-progress-fill" id="quiz-progress"></div>
-        </div>
-      </div>
-      
-      <!-- Step 1: Target Gender -->
-      <div class="quiz-step active" data-step="1">
-        <p class="quiz-question">Who are we styling today?</p>
-        <div class="quiz-options">
-          <button class="quiz-option" data-answer="gender" data-value="Female">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Myself (Female) / Shopping for Her</span>
-          </button>
-          <button class="quiz-option" data-answer="gender" data-value="Male">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Myself (Male) / Shopping for Him</span>
-          </button>
-          <button class="quiz-option" data-answer="gender" data-value="Unisex">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Looking for unisex streetwear & versatile fits</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Step 2: Occasion -->
-      <div class="quiz-step" data-step="2">
-        <p class="quiz-question">What is the primary occasion for these items?</p>
-        <div class="quiz-options">
-          <button class="quiz-option" data-answer="occasion" data-value="casual">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Casual outings & stylish street fashion</span>
-          </button>
-          <button class="quiz-option" data-answer="occasion" data-value="formal">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Formal work settings, meetings & elegance</span>
-          </button>
-          <button class="quiz-option" data-answer="occasion" data-value="glam">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Special galas, night outs & showstoppers</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Step 3: Product Category -->
-      <div class="quiz-step" data-step="3">
-        <p class="quiz-question">Which item type is calling your name?</p>
-        <div class="quiz-options">
-          <button class="quiz-option" data-answer="category" data-value="Footwear">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Footwears (Sneakers, Heels, Boots)</span>
-          </button>
-          <button class="quiz-option" data-answer="category" data-value="Bags">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Bags (Luxury leather, Handbags)</span>
-          </button>
-          <button class="quiz-option" data-answer="category" data-value="Clothes">
-            <span class="quiz-option-bullet"></span>
-            <span class="quiz-option-text">Clothes (Designer dresses, Premium fits)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Step 4: Selfie session (optional) -->
-      <div class="quiz-step" data-step="4">
-        <p class="quiz-question">Fancy a private fashion show? 🎭</p>
-        <p class="quiz-cam-note">Take a quick selfie and we'll unveil your matched look on stage — starring you.
-          Your photo <strong>never leaves this device</strong>.</p>
-
-        <div class="quiz-cam-stage" id="quiz-cam-stage">
-          <video id="quiz-cam-video" playsinline autoplay muted hidden></video>
-          <img id="quiz-selfie-preview" alt="Your selfie preview" hidden>
-          <div class="quiz-cam-placeholder" id="quiz-cam-placeholder">📸</div>
-        </div>
-
-        <div class="quiz-cam-actions" id="quiz-cam-actions">
-          <button class="btn btn-primary" id="quiz-cam-start">📷 Open Camera</button>
-          <label class="btn btn-secondary" for="quiz-selfie-upload" style="cursor:pointer;">🖼 Upload a Photo</label>
-          <input type="file" id="quiz-selfie-upload" accept="image/*" capture="user" class="sr-only">
-          <button class="btn btn-ghost" id="quiz-cam-skip">Skip →</button>
-        </div>
-
-        <div class="quiz-cam-actions" id="quiz-snap-actions" hidden>
-          <button class="btn btn-primary" id="quiz-cam-snap">📸 Snap!</button>
-          <button class="btn btn-ghost" id="quiz-cam-cancel">Cancel</button>
-        </div>
-
-        <div class="quiz-cam-actions" id="quiz-selfie-actions" hidden>
-          <button class="btn btn-primary" id="quiz-show-btn">✨ Start My Fashion Show</button>
-          <button class="btn btn-ghost" id="quiz-retake-btn">↺ Retake</button>
-        </div>
-      </div>
-
-      <!-- Step 5: Results / Fashion Show -->
-      <div class="quiz-step" data-step="5" id="quiz-results-container">
-        <!-- Result items injected dynamically -->
-      </div>
-
-      <div class="quiz-footer">
-        <button class="btn btn-ghost" id="quiz-prev-btn" style="visibility: hidden;">
-          <span>Back</span>
-        </button>
-        <div style="font-size: 0.85rem; color: var(--color-text-muted); align-self: center;" id="quiz-step-indicator">Step 1 of 3</div>
-      </div>
-    </div>
-  </dialog>
 
   <!-- Wishlist Dialog Drawer -->
   <dialog id="wishlist-drawer" aria-labelledby="wishlist-drawer-heading">
     <div class="cart-header">
-      <h2 id="wishlist-drawer-heading" class="cart-title">💜 Saved Items</h2>
+      <h2 id="wishlist-drawer-heading" class="cart-title">Saved items</h2>
       <button class="dialog-close" id="close-wishlist-btn" style="position: static;" aria-label="Close wishlist">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -760,62 +543,10 @@
       <!-- Injected Dynamically by JS -->
     </div>
     <div class="wishlist-footer">
-      <button class="btn btn-primary" id="wishlist-add-all-btn" style="width:100%;">🛒 Add All to Cart</button>
-      <button class="btn btn-ghost" id="wishlist-clear-btn" style="width:100%;">Clear Wishlist</button>
+      <button class="btn btn-primary" id="wishlist-add-all-btn" style="width:100%;">Add all to bag</button>
+      <button class="btn btn-ghost" id="wishlist-clear-btn" style="width:100%;">Clear saved items</button>
     </div>
   </dialog>
-
-  <!-- ===== Quick Answers chat widget ===== -->
-  <div id="tacey-ai-widget" aria-label="Quick answers about stock and delivery">
-    <!-- Floating Trigger Bubble -->
-    <button class="ai-bubble-btn" id="ai-bubble-btn" aria-expanded="false" aria-controls="ai-chat-window" aria-label="Open quick answers about stock, prices and delivery">
-      <span class="ai-bubble-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      </span>
-      <span class="ai-bubble-label">Quick answers</span>
-      <span class="ai-pulse-ring"></span>
-    </button>
-
-    <!-- Chat Window -->
-    <div class="ai-chat-window" id="ai-chat-window" role="dialog" aria-labelledby="ai-chat-heading" hidden>
-      <div class="ai-chat-header">
-        <div class="ai-chat-header-info">
-          <div class="ai-avatar">
-            <img src="assets/logo.webp" alt="" class="ai-avatar-img">
-            <span class="ai-online-dot" aria-hidden="true"></span>
-          </div>
-          <div>
-            <h3 class="ai-chat-title" id="ai-chat-heading">Quick Answers</h3>
-            <span class="ai-chat-subtitle">Stock, prices and delivery — answered instantly</span>
-          </div>
-        </div>
-        <button class="ai-chat-close" id="ai-chat-close" aria-label="Close chat">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-
-      <!-- Message Scroll Area -->
-      <div class="ai-messages" id="ai-messages" aria-live="polite" aria-atomic="false"></div>
-
-      <!-- Quick Reply Chips -->
-      <div class="ai-chips" id="ai-chips">
-        <button class="ai-chip" data-msg="What shoes do you have?">👟 Show shoes</button>
-        <button class="ai-chip" data-msg="What bags are available?">👜 Show bags</button>
-        <button class="ai-chip" data-msg="Show me dresses">👗 Show dresses</button>
-        <button class="ai-chip" data-msg="How does delivery work?">🚚 Delivery info</button>
-        <button class="ai-chip" data-msg="What are your prices?">💰 Prices</button>
-      </div>
-
-      <!-- Input Bar -->
-      <form class="ai-input-bar" id="ai-input-bar" autocomplete="off">
-        <label for="ai-input" class="sr-only">Type your question</label>
-        <input type="text" id="ai-input" class="ai-input" placeholder="Ask about shoes, bags, delivery…" maxlength="200">
-        <button type="submit" class="ai-send-btn" aria-label="Send message">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </form>
-    </div>
-  </div>
 
   <script src="store.js"></script>
   <script src="app.js" type="module"></script>
