@@ -16,6 +16,8 @@
     text-size-adjust: none;
   }
 
+  html { overflow-x: clip; }
+
   body {
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -869,10 +871,6 @@
   .cart-total-price {
     color: var(--color-accent);
   }
-  .cart-total-price::before {
-    content: 'KES ';
-    font-size: 0.9rem;
-  }
 
   .cart-disclaimer {
     font-size: 0.75rem;
@@ -1585,9 +1583,28 @@
   overflow-y: auto;
 }
 
-.nav-drawer.open {
-  transform: translateX(0);
+/* The closed menu used to wait just off the right edge. Phone browsers
+   fix the page width at load and counted it, so a 390px phone got a 722px
+   page and every pop-up was centred off-screen. Now it waits invisibly
+   inside the screen and slides a little way in when opened. */
+.nav-drawer {
+  transform: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
+
+.nav-drawer.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  animation: nav-drawer-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nav-drawer-in { from { transform: translateX(28px); } }
+
+@media (prefers-reduced-motion: reduce) { .nav-drawer.open { animation: none; } }
 
 .nav-drawer-header {
   display: flex;
@@ -3406,3 +3423,112 @@ dialog#wishlist-drawer[open]::backdrop { background-color: hsl(330 40% 15% / 0.4
   .step-card h3 { margin: 0.15rem 0 0.25rem; }
   .step-card p { grid-column: 2; font-size: 0.92rem; }
 }
+
+/* Closed drawers must not be drawn at all. They were display:flex even when
+   closed, parked just off the right edge, which made phone browsers lay the
+   whole page out 722px wide on a 390px screen (pop-ups off-centre, sideways
+   wobble). The slide-in still works through the existing @starting-style. */
+dialog#cart-drawer:not([open]),
+dialog#wishlist-drawer:not([open]) { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   PRODUCT SHEET & BAG (Oct 2026)
+   ═══════════════════════════════════════════════════════════════ */
+.details-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+.details-add { flex: 1 1 auto; min-height: 50px; font-size: 1rem; }
+.modal-wishlist-btn, .modal-share-btn {
+  width: 50px; height: 50px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.modal-share-btn:hover, .modal-wishlist-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.modal-wishlist-btn.wishlisted { color: var(--color-primary); border-color: hsl(334 82% 46% / 0.4); background: hsl(334 82% 46% / 0.06); }
+.details-ask {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: hsl(142 64% 30%);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.details-price { color: var(--color-text); }
+
+/* Bag: clearer delivery box and totals */
+.delivery-section { background: hsl(340 60% 97%); border-color: var(--color-border); }
+.delivery-section-header { color: var(--color-text); }
+.cart-total-price { color: var(--color-text); }
+#cart-grand-total { color: var(--color-primary); font-size: 1.25rem !important; }
+#checkout-whatsapp-btn { min-height: 52px; font-size: 1rem; border-radius: 14px; }
+.delivery-address-input[hidden], .delivery-label[hidden] { display: none; }
+
+@media (max-width: 768px) {
+  /* Product view: a bottom sheet that slides up, with the buy bar pinned. */
+  dialog#product-detail-modal[open] {
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    padding: 0.5rem 1.1rem 0;
+    border: 0;
+    border-radius: 24px 24px 0 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: sheet-up 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  dialog#product-detail-modal[open]::before {
+    content: '';
+    display: block;
+    width: 44px; height: 5px;
+    margin: 0.35rem auto 0.6rem;
+    border-radius: 999px;
+    background: hsl(330 15% 82%);
+  }
+  #product-detail-modal .dialog-close { top: 0.9rem; right: 0.9rem; }
+  #product-detail-modal .details-modal-grid { gap: 1rem; margin-top: 0; }
+  #product-detail-modal .details-main-img-wrap { border-radius: 18px; overflow: hidden; }
+  #product-detail-modal .details-title { font-size: 1.6rem; margin: 0.2rem 0 0.1rem; }
+  #product-detail-modal .details-actions {
+    position: sticky;
+    bottom: 0;
+    margin: 1rem -1.1rem 0;
+    padding: 0.75rem 1.1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: hsl(0 0% 100% / 0.96);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Bag: full screen on phones, totals and checkout always in view. */
+  dialog#cart-drawer[open] {
+    width: 100%;
+    max-width: 100%;
+    padding: 1rem 1.1rem 0;
+    border-left: 0;
+  }
+  #cart-drawer .cart-footer {
+    position: sticky;
+    bottom: 0;
+    margin: 0 -1.1rem;
+    padding: 0.9rem 1.1rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+    gap: 0.6rem;
+    background: var(--color-surface);
+    box-shadow: 0 -10px 24px -18px hsl(330 50% 20% / 0.5);
+  }
+  #cart-drawer .delivery-section { padding: 0.85rem; }
+  #cart-drawer .cart-disclaimer { font-size: 0.78rem; margin: 0; }
+}
+
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) { dialog#product-detail-modal[open] { animation: none; } }

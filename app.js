@@ -489,20 +489,34 @@ function openDetailModal(id) {
       </p>
       <p class="details-desc">${p.description}</p>
       ${sizeHTML}
-      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:auto;">
-        <button class="btn btn-primary" id="modal-add-cart-btn" ${!p.inStock ? 'disabled' : ''}>
-          ${p.inStock ? 'Add to bag' : 'Sold out'}
+      <a href="https://wa.me/254702179011?text=${encodeURIComponent(`Hi Stacey! I'm interested in: *${p.name}* at KES ${p.price.toLocaleString('en-KE')}. Is it available?`)}"
+         class="details-ask" target="_blank" rel="noopener noreferrer">Questions about sizes or colours? Ask Stacey on WhatsApp</a>
+      <div class="details-actions">
+        <button class="btn btn-primary details-add" id="modal-add-cart-btn" ${!p.inStock ? 'disabled' : ''}>
+          ${p.inStock ? `Add to bag · KES ${p.price.toLocaleString('en-KE')}` : 'Sold out'}
         </button>
         <button class="modal-wishlist-btn ${wishlisted ? 'wishlisted' : ''}" id="modal-wishlist-btn"
                 aria-label="${wishlisted ? 'Remove from' : 'Save to'} wishlist" aria-pressed="${wishlisted}">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="${wishlisted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </button>
-        <a href="https://wa.me/254702179011?text=${encodeURIComponent(`Hi Stacey! I'm interested in: *${p.name}* at KES ${p.price.toLocaleString('en-KE')}. Is it available?`)}"
-           class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer">
-          Ask Stacey
-        </a>
+        <button class="modal-share-btn" id="modal-share-btn" aria-label="Share this piece">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
       </div>
     </div>`;
+
+  // Share: a link that opens the shop with this piece already showing.
+  $('modal-share-btn')?.addEventListener('click', async () => {
+    const url = `${SITE_ORIGIN}/?p=${p.id}`;
+    const text = `${p.name} — KES ${p.price.toLocaleString('en-KE')} at Tacey Collections`;
+    try {
+      if (navigator.share) { await navigator.share({ title: p.name, text, url }); return; }
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      shopToast('Link copied — paste it into WhatsApp');
+    } catch (err) {
+      if (err?.name !== 'AbortError') shopToast('Could not share — copy the address from your browser');
+    }
+  });
 
   // Gallery thumbnail switching
   document.getElementById('modal-gallery-thumbs')?.addEventListener('click', e => {
@@ -686,15 +700,15 @@ function buildWhatsAppMessage() {
   const fee  = getDeliveryFee();
   const sel  = $('delivery-location');
   const loc  = sel?.options[sel.selectedIndex]?.text || 'Self Pickup';
-  const addr = $('delivery-address')?.value?.trim() || 'N/A';
+  const addr = $('delivery-address')?.value?.trim();
+  const pickup = sel?.value === 'pickup';
   const grand = subtotal + fee;
 
   return `Hi Stacey! 👋 I'd like to place an order from Tacey Collections:
 
 ${lines.join('\n')}
 
-🚚 Delivery: ${loc}
-📍 Address: ${addr}
+🚚 Delivery: ${loc}${pickup ? '' : `\n📍 Address: ${addr || '(I will share it here)'}`}
 ─────────────────
 🛍️ Subtotal:  ${fmt(subtotal)}
 🚚 Delivery Fee: ${fmt(fee)}
@@ -1003,8 +1017,13 @@ function initModals() {
     }
   });
 
-  // Delivery fee live update
-  $('delivery-location')?.addEventListener('change', renderCart);
+  // Delivery fee live update; the address box only matters for delivery.
+  const syncAddress = () => {
+    const pickup = $('delivery-location')?.value === 'pickup';
+    [$('delivery-address'), $('delivery-address-label')].forEach(el => { if (el) el.hidden = pickup; });
+  };
+  $('delivery-location')?.addEventListener('change', () => { syncAddress(); renderCart(); });
+  syncAddress();
 
   // WhatsApp checkout
   $('checkout-whatsapp-btn')?.addEventListener('click', () => {
@@ -1068,6 +1087,15 @@ function initWishlist() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadProductsFromApi();
+  // Bags and saved lists live on the shopper's phone. Drop pieces that are
+  // no longer in the shop (e.g. the old samples) so nothing breaks.
+  const exists = id => PRODUCTS.some(p => p.id === id);
+  if (PRODUCTS.length) {
+    cart = cart.filter(item => exists(item.id));
+    wishlist = wishlist.filter(exists);
+    saveCart();
+    saveWishlist();
+  }
   renderDeptPage();
   renderHome();
   initPromo();
@@ -1085,6 +1113,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Arriving from an info page's bag icon (/#cart) — open the drawer.
   if (location.hash === '#cart') {
     openCart();
+    history.replaceState(null, '', location.pathname);
+  }
+  // A shared product link (/?p=12) opens that piece straight away.
+  const sharedId = Number(new URLSearchParams(location.search).get('p'));
+  if (sharedId && PRODUCTS.some(x => x.id === sharedId)) {
+    openDetailModal(sharedId);
     history.replaceState(null, '', location.pathname);
   }
   if (location.hash === '#saved') {

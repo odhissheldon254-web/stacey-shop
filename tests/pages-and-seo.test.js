@@ -405,3 +405,12 @@ test('the hidden menu backdrop never blocks taps on phones', () => {
   assert.match(css, /\.nav-drawer-backdrop\s*\{[^}]*pointer-events:\s*none/, 'closed backdrop must not catch taps');
   assert.match(css, /\.nav-drawer-backdrop\.open\s*\{[^}]*pointer-events:\s*auto/, 'open backdrop must catch taps to close the menu');
 });
+
+test('closed drawers are not drawn, so phones get a phone-width page', () => {
+  // display:flex on the closed bag/saved drawers parked them just off the
+  // right edge; phone browsers laid the page out 722px wide on a 390px
+  // screen and every pop-up was centred off-screen.
+  const css = fs.readFileSync(path.join(ROOT, 'index.css'), 'utf8');
+  assert.match(css, /dialog#cart-drawer:not\(\[open\]\)[\s\S]{0,80}display:\s*none/);
+  assert.match(css, /dialog#wishlist-drawer:not\(\[open\]\)[\s\S]{0,40}display:\s*none/);
+});
