@@ -6,4 +6,4 @@ Disallow: /admin.html
 Disallow: /stock-admin.html
 Disallow: /api/
 
-Sitemap: https://tacey.odhis.co.ke/sitemap.xml
+Sitemap: https://taceycollections.odhis.co.ke/sitemap.xml

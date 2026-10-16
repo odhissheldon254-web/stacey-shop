@@ -15,8 +15,8 @@ const path = require('path');
 
 const root = __dirname;
 const out = path.join(root, '_site');
-const SITE = 'https://tacey.odhis.co.ke';
-const DOMAIN = 'tacey.odhis.co.ke';
+const SITE = 'https://taceycollections.odhis.co.ke';
+const DOMAIN = 'taceycollections.odhis.co.ke';
 
 const PUBLIC_FILES = [
   'index.html', 'shop.html', 'about.html', 'contact.html', 'delivery.html',

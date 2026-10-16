@@ -1,6 +1,6 @@
 # How Tacey Collections runs
 
-Live at **https://tacey.odhis.co.ke**. No server of our own and nothing to pay
+Live at **https://taceycollections.odhis.co.ke**. No server of our own and nothing to pay
 for except the domain.
 
 | Piece | What it does | Where |
@@ -73,14 +73,20 @@ recovery, or set a new one.
 
 ## Custom domain
 
-Truehost zone `odhis.co.ke` has one record for the shop:
+Truehost zone `odhis.co.ke` has two records for the shop:
 
-| Type | Name | Target |
-|---|---|---|
-| CNAME | `tacey` | `odhissheldon254-web.github.io.` |
+| Type | Name | Target | Serves |
+|---|---|---|---|
+| CNAME | `taceycollections` | `odhissheldon254-web.github.io.` | the shop (this repo) |
+| CNAME | `tacey` | `odhissheldon254-web.github.io.` | the old address, forwarding to the new one |
 
-GitHub (repo → Settings → Pages) has `tacey.odhis.co.ke` as the custom domain
+GitHub (repo → Settings → Pages) has `taceycollections.odhis.co.ke` as the custom domain
 with **Enforce HTTPS** on; GitHub renews the certificate itself. The `CNAME`
 file GitHub needs is written into `_site/` by `build-site.js`.
+
+The shop first lived at `tacey.odhis.co.ke`. That address is kept alive by a
+tiny separate repo, `odhissheldon254-web/tacey-redirect`, whose only job is to
+send every visitor (path included) to `https://taceycollections.odhis.co.ke`.
+GitHub Pages allows one custom domain per repo, which is why it is separate.
 
 The bare `odhis.co.ke` is free for other projects.

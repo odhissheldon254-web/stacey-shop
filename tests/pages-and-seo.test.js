@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const SITE = 'https://tacey.odhis.co.ke';
+const SITE = 'https://taceycollections.odhis.co.ke';
 const { build } = require('../build-site.js');
 
 // Every test serves the freshly built _site/, the same files GitHub Pages

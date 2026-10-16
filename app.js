@@ -293,7 +293,7 @@ function renderProducts(list = getFilteredProducts()) {
 /* ================================================================
    DEPARTMENT PAGE — hero + horizontal shelves
    ================================================================ */
-const SITE_ORIGIN = 'https://tacey.odhis.co.ke';
+const SITE_ORIGIN = 'https://taceycollections.odhis.co.ke';
 
 /* The three departments share one HTML file, so the per-department canonical
    URL, description and breadcrumb trail have to be set once we know which
