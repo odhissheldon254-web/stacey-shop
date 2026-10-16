@@ -328,6 +328,28 @@
     .photo-pick:focus-within .product-row-img { outline: 2px solid var(--primary); outline-offset: 2px; }
     .photo-pick.busy .product-row-img { opacity: 0.4; }
 
+    .photo-strip { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .photo-strip:empty { display: none; }
+    .photo-strip-hint { font-size: 0.78rem; color: var(--muted); }
+    .photo-thumb { position: relative; width: 64px; height: 64px; }
+    .photo-thumb-img {
+      display: block; width: 100%; height: 100%; padding: 0; border: 0;
+      border-radius: 10px; overflow: hidden; cursor: pointer; background: none;
+    }
+    .photo-thumb-img img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-thumb.is-main .photo-thumb-img { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .photo-main-tag {
+      position: absolute; left: 4px; bottom: 4px;
+      font-size: 0.58rem; font-weight: 700; padding: 0.05rem 0.35rem;
+      border-radius: 6px; background: var(--primary); color: #fff;
+    }
+    .photo-thumb-x {
+      position: absolute; top: -7px; right: -7px;
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 0; background: rgba(0,0,0,0.75); color: #fff;
+      font-size: 0.7rem; line-height: 24px; cursor: pointer;
+    }
+
     .btn-photo {
       display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
       width: 100%; min-height: 52px; border-radius: 12px; cursor: pointer;
@@ -665,15 +687,12 @@
             </select>
           </div>
           <div class="form-group">
-            <span class="form-label">Product photo</span>
+            <span class="form-label">Photos (up to 8, the first is the main one)</span>
             <label class="btn-photo">
-              📷 Add photo
-              <input id="new-image-file" type="file" accept="image/*">
+              📷 Add photos
+              <input id="new-image-file" type="file" accept="image/*" multiple>
             </label>
-            <input id="new-image" type="hidden">
-            <div style="margin-top:0.6rem;">
-              <img id="new-image-preview" src="assets/logo.webp" alt="Product preview" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
-            </div>
+            <div class="photo-strip" id="new-photos" style="margin-top:0.6rem;"></div>
           </div>
           <div class="form-group" style="grid-column:1/-1;">
             <label class="form-label" for="new-desc">Description</label>
@@ -885,12 +904,13 @@
 
     list.innerHTML = products.map(p => `
       <div class="product-row ${p.inStock ? '' : 'is-out'}" data-pid="${p.id}">
-        <label class="photo-pick" title="Change photo">
+        <label class="photo-pick" title="Add photos">
           <img src="${escHtml(p.image)}" alt="${escHtml(p.name)}" class="product-row-img" onerror="this.src='assets/logo.webp'">
-          <span class="photo-pick-tag">📷 Change</span>
-          <input id="img-upload-${p.id}" type="file" accept="image/*" aria-label="Change the photo of ${escHtml(p.name)}" onchange="handleProductImageUpload(this, ${p.id})">
+          <span class="photo-pick-tag">📷 Add</span>
+          <input id="img-upload-${p.id}" type="file" accept="image/*" multiple aria-label="Add photos of ${escHtml(p.name)}" onchange="handleProductImageUpload(this, ${p.id})">
         </label>
         <div class="product-row-fields">
+          ${photoStripHTML(p)}
           <input class="field-input" value="${escHtml(p.name)}" data-field="name" placeholder="Product name">
           <div class="field-row">
             <input class="field-input price-input" type="number" value="${p.price}" data-field="price" min="0" placeholder="Price">
@@ -926,7 +946,6 @@
               <label class="form-label" for="tags-${p.id}">Tags (comma-separated)</label>
               <input id="tags-${p.id}" class="field-input" value="${escHtml((p.tags || []).join(', '))}" data-field="tags">
             </div>
-            <input type="hidden" value="${escHtml(p.image)}" data-field="image">
           </details>
         </div>
         <div class="product-row-actions">
@@ -985,7 +1004,7 @@
     p.price       = parseFloat(row.querySelector('[data-field="price"]')?.value) || p.price;
     p.category    = row.querySelector('[data-field="category"]')?.value.trim() || p.category;
     p.gender      = row.querySelector('[data-field="gender"]')?.value || p.gender;
-    p.image       = row.querySelector('[data-field="image"]')?.value.trim() || p.image;
+    // Photos are managed by the photo strip and saved as they change.
     p.description = row.querySelector('[data-field="description"]')?.value.trim() ?? p.description;
     p.tags        = (row.querySelector('[data-field="tags"]')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
     p.qty         = Math.max(0, Math.floor(Number(row.querySelector('[data-field="qty"]')?.value ?? p.qty) || 0));
@@ -1065,32 +1084,83 @@
     }
   }
 
-  function dataUrlKb(dataUrl) {
-    return Math.round((dataUrl.length * 3 / 4) / 1024);
-  }
 
   async function uploadPhoto(dataUrl) {
     const blob = await (await fetch(dataUrl)).blob();
     return Store.uploadImage(blob);
   }
 
+  /* ── Photos: several per piece, the first one is the main photo ── */
+  function photosOf(p) {
+    const list = Array.isArray(p.images) && p.images.length ? [...p.images] : (p.image ? [p.image] : []);
+    // The shop logo is only a placeholder; real photos replace it.
+    return list.filter(u => !/assets\/(logo\.(webp|jpe?g)|brand_flyer\.jpeg)$/.test(u));
+  }
+  function setPhotos(p, list) {
+    p.images = list.slice(0, 8);
+    p.image = p.images[0] || 'assets/logo.webp';
+  }
+
+  function photoStripHTML(p) {
+    const list = photosOf(p);
+    if (!list.length) return '<p class="photo-strip-hint">No photos yet. Tap the picture to add some.</p>';
+    return `<div class="photo-strip" aria-label="Photos of ${escHtml(p.name)}">
+      ${list.map((u, i) => `
+        <div class="photo-thumb ${i === 0 ? 'is-main' : ''}">
+          <button type="button" class="photo-thumb-img" onclick="makeMainPhoto(${p.id}, ${i})"
+                  aria-label="${i === 0 ? 'Main photo' : 'Make this the main photo'}">
+            <img src="${escHtml(u)}" alt="" loading="lazy">
+          </button>
+          ${i === 0 ? '<span class="photo-main-tag">Main</span>' : ''}
+          <button type="button" class="photo-thumb-x" onclick="removePhoto(${p.id}, ${i})" aria-label="Remove this photo">✕</button>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  window.makeMainPhoto = async function(productId, idx) {
+    const p = products.find(x => x.id === productId);
+    if (!p || idx === 0) return;
+    const before = photosOf(p);
+    const list = [...before];
+    list.unshift(list.splice(idx, 1)[0]);
+    setPhotos(p, list);
+    if (!(await persist(`⭐ New main photo for "${p.name}"`))) setPhotos(p, before);
+    renderProductList();
+  };
+
+  window.removePhoto = async function(productId, idx) {
+    const p = products.find(x => x.id === productId);
+    if (!p) return;
+    if (!confirm('Remove this photo from the shop?')) return;
+    const before = photosOf(p);
+    setPhotos(p, before.filter((_, i) => i !== idx));
+    if (!(await persist(`🗑 Photo removed from "${p.name}"`))) setPhotos(p, before);
+    renderProductList();
+  };
+
   window.handleProductImageUpload = async function(input, productId) {
-    const file = input.files?.[0];
-    if (!file) return;
-    const row = document.querySelector(`.product-row[data-pid="${productId}"]`);
-    if (!row) return;
+    const files = [...(input.files || [])];
+    if (!files.length) return;
     const picker = input.closest('.photo-pick');
     picker?.classList.add('busy');
     try {
-      const dataUrl = await compressImage(file);
-      showToast('⏫ Uploading photo…', 'success');
-      const url = await uploadPhoto(dataUrl);
       const p = products.find(x => x.id === productId);
-      const before = p?.image;
-      if (p) p.image = url;
+      if (!p) return;
+      const before = photosOf(p);
+      const room = 8 - before.length;
+      if (room <= 0) { showToast('⚠️ 8 photos is the limit — remove one first', 'error'); return; }
+      const todo = files.slice(0, room);
+      const added = [];
+      for (const [n, file] of todo.entries()) {
+        showToast(`⏫ Uploading photo ${n + 1} of ${todo.length}…`, 'success');
+        const dataUrl = await compressImage(file);
+        added.push(await uploadPhoto(dataUrl));
+      }
+      setPhotos(p, [...before, ...added]);
       // Saved straight away: a new photo is never left waiting for a
       // Save button she might not notice.
-      if (p && !(await persist(`📷 Photo uploaded and saved for "${p.name}"`))) p.image = before;
+      const word = added.length === 1 ? 'Photo' : `${added.length} photos`;
+      if (!(await persist(`📷 ${word} uploaded and saved for "${p.name}"`))) setPhotos(p, before);
       renderProductList();
     } catch (error) {
       console.error(error);
@@ -1111,18 +1181,39 @@
 
   $('cancel-add-btn').addEventListener('click', () => addForm.classList.remove('open'));
 
+  // Photos for a piece that is not saved yet.
+  let newPhotos = [];
+  function renderNewPhotos() {
+    $('new-photos').innerHTML = newPhotos.map((u, i) => `
+      <div class="photo-thumb ${i === 0 ? 'is-main' : ''}">
+        <span class="photo-thumb-img"><img src="${escHtml(u)}" alt=""></span>
+        ${i === 0 ? '<span class="photo-main-tag">Main</span>' : ''}
+        <button type="button" class="photo-thumb-x" data-new-photo="${i}" aria-label="Remove this photo">✕</button>
+      </div>`).join('');
+  }
+  $('new-photos').addEventListener('click', e => {
+    const x = e.target.closest('[data-new-photo]');
+    if (!x) return;
+    newPhotos.splice(Number(x.dataset.newPhoto), 1);
+    renderNewPhotos();
+  });
+
   $('new-image-file').addEventListener('change', async () => {
-    const file = $('new-image-file').files?.[0];
-    if (!file) return;
+    const files = [...($('new-image-file').files || [])].slice(0, 8 - newPhotos.length);
+    if (!files.length) { showToast('⚠️ 8 photos is the limit', 'error'); return; }
     try {
-      const dataUrl = await compressImage(file);
-      $('new-image-preview').src = dataUrl;
-      showToast(`⏫ Uploading photo (${dataUrlKb(dataUrl)} KB)…`, 'success');
-      $('new-image').value = await uploadPhoto(dataUrl);
+      for (const [n, file] of files.entries()) {
+        const dataUrl = await compressImage(file);
+        showToast(`⏫ Uploading photo ${n + 1} of ${files.length}…`, 'success');
+        newPhotos.push(await uploadPhoto(dataUrl));
+        renderNewPhotos();
+      }
       showToast('🖼 Photo uploaded — fill in the rest and tap Save', 'success');
     } catch (error) {
       console.error(error);
       showToast(`⚠️ ${error.message || 'Could not upload the selected image'}`, 'error');
+    } finally {
+      $('new-image-file').value = '';
     }
   });
 
@@ -1141,7 +1232,8 @@
       qty,
       category: $('new-category').value.trim() || 'Clothes',
       gender: $('new-gender').value,
-      image: $('new-image').value.trim() || 'assets/brand_flyer.jpeg',
+      image: newPhotos[0] || 'assets/logo.webp',
+      images: [...newPhotos],
       description: $('new-desc').value.trim(),
       tags: $('new-tags').value.split(',').map(t => t.trim()).filter(Boolean),
       inStock: qty > 0,
@@ -1155,10 +1247,10 @@
 
     renderProductList();
     addForm.classList.remove('open');
-    ['new-name','new-price','new-image','new-desc','new-tags'].forEach(id => { $(id).value = ''; });
+    ['new-name','new-price','new-desc','new-tags'].forEach(id => { $(id).value = ''; });
+    newPhotos = [];
+    renderNewPhotos();
     $('new-qty').value = '1';
-    $('new-image-file').value = '';
-    $('new-image-preview').src = 'assets/brand_flyer.jpeg';
     $('new-instock').checked = true;
     $('new-featured').checked = false;
   });

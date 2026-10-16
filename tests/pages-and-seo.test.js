@@ -386,7 +386,7 @@ test('admin image uploads are compressed before they are stored', async () => {
     `IMAGE_MAX_EDGE is ${maxEdge}px — large enough to defeat the point of resizing`);
 
   // Every file-picker handler has to go through it, not straight to the raw read.
-  const handlers = [...admin.matchAll(/(?:handleProductImageUpload[\s\S]{0,1200}?|new-image-file'\)\.addEventListener[\s\S]{0,1200}?)Photo uploaded/g)]
+  const handlers = [...admin.matchAll(/(?:handleProductImageUpload[\s\S]{0,1200}?|new-image-file'\)\.addEventListener[\s\S]{0,1600}?)(?:Photo uploaded|uploaded and saved)/g)]
     .map(m => m[0]);
   assert.ok(handlers.length >= 2, 'expected both upload paths (existing product, and new product)');
   for (const handler of handlers) {

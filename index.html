@@ -176,7 +176,7 @@
         <h1 class="home-title" id="home-title">Style that speaks <em>for you.</em></h1>
         <p class="home-hero-sub">Handpicked pieces for women, men and kids. Order on WhatsApp and pay by M-Pesa once Stacey confirms your item.</p>
         <div class="home-hero-actions">
-          <a href="#new-arrivals" class="btn btn-primary">Shop new arrivals</a>
+          <a href="/shop" class="btn btn-primary">Shop now</a>
           <a href="https://wa.me/254702179011" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Chat with Stacey</a>
         </div>
       </div>
@@ -211,9 +211,10 @@
     <section class="home-section" id="new-arrivals" aria-labelledby="new-heading">
       <div class="home-section-head">
         <h2 class="home-h2" id="new-heading">New arrivals</h2>
-        <a class="see-all" href="#catalog">See everything</a>
+        <a class="see-all" href="/shop">See everything</a>
       </div>
       <div class="shelf-track new-arrivals-track" id="new-arrivals-track" role="group" aria-label="New arrivals"></div>
+      <a class="btn btn-secondary shop-all-btn" href="/shop">Shop everything</a>
     </section>
 
     <section class="home-section" id="departments" aria-labelledby="dept-heading">
@@ -239,40 +240,6 @@
       </div>
     </section>
 
-    <section class="catalog-section" id="catalog" aria-labelledby="catalog-heading">
-      <div class="catalog-controls">
-        <h2 class="home-h2" id="catalog-heading">All pieces</h2>
-        <div class="catalog-filters">
-          <!-- Category Tabs (rebuilt dynamically from live catalog) -->
-          <div class="filter-tabs" role="tablist" aria-label="Filter by category" id="category-tablist">
-            <button class="filter-tab active" role="tab" aria-selected="true" data-filter="category" data-value="all">All Items</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Footwear">Footwear</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Bags">Bags</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="category" data-value="Clothes">Clothes</button>
-          </div>
-
-          <!-- Department Tabs -->
-          <div class="filter-tabs" role="tablist" aria-label="Filter by department">
-            <button class="filter-tab active" role="tab" aria-selected="true" data-filter="gender" data-value="all">Everyone</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Female">Women</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Male">Men</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Kids">Kids</button>
-            <button class="filter-tab" role="tab" aria-selected="false" data-filter="gender" data-value="Unisex">Unisex</button>
-          </div>
-
-          <!-- Search Input -->
-          <div class="catalog-search-wrap">
-            <label for="product-search" class="sr-only">Search products</label>
-            <input type="search" id="product-search" class="search-input" placeholder="Search heels, bags, sneakers…">
-          </div>
-        </div>
-      </div>
-
-      <!-- Dynamic Product Grid -->
-      <div class="product-grid" id="product-grid-container" aria-live="polite">
-        <!-- Rendered by JavaScript -->
-      </div>
-    </section>
 
     <!-- How Ordering Works — trust section -->
     <section class="how-it-works" id="how-it-works" aria-labelledby="how-heading">
@@ -284,30 +251,25 @@
         <article class="step-card">
           <span class="step-number">1</span>
           <h3>Browse &amp; add to bag</h3>
-          <p>Pick your favourites from the catalog and add them to your order bag. No account needed.</p>
+          <p>No account needed.</p>
         </article>
         <article class="step-card">
           <span class="step-number">2</span>
           <h3>Confirm on WhatsApp</h3>
-          <p>Your order opens as a WhatsApp message to Stacey, who confirms availability, sizes, and your delivery details.</p>
+          <p>Your bag opens as a message to Stacey. She confirms sizes and stock.</p>
         </article>
         <article class="step-card">
           <span class="step-number">3</span>
           <h3>Pay via M-Pesa</h3>
-          <p>Pay only after Stacey confirms your order, to the Tacey Collections paybill — <a href="/delivery">the numbers are published here</a>, with the total agreed upfront.</p>
+          <p>Only after she confirms. <a href="/delivery">Paybill details</a>.</p>
         </article>
         <article class="step-card">
           <span class="step-number">4</span>
           <h3>Delivery or pickup</h3>
-          <p>Doorstep delivery across Kenya (fees shown at checkout) or free self-pickup. Wrong item or size? Message Stacey within 48 hours to arrange an exchange.</p>
+          <p>Across Kenya, or free pickup in Nairobi. Exchanges within 48 hours.</p>
         </article>
       </div>
-      <div class="link-tiles how-it-works-links">
-        <a class="link-tile" href="/delivery">Delivery rates &amp; payment</a>
-        <a class="link-tile" href="/size-guide">Find your size</a>
-        <a class="link-tile" href="/faq">Returns &amp; FAQs</a>
-        <a class="link-tile" href="/contact">Contact Stacey</a>
-      </div>
+      <a class="text-link" href="/delivery">Delivery rates, paying and exchanges</a>
     </section>
 
     <!-- Testimonials -->
@@ -372,7 +334,7 @@
           <li><a href="/men">Men</a></li>
           <li><a href="/kids">Kids</a></li>
           <li><a href="/shop">All Departments</a></li>
-          <li><a href="/#catalog">Full Catalogue</a></li>
+          <li><a href="/shop">Everything in the shop</a></li>
         </ul>
       </nav>
 

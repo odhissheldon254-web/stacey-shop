@@ -159,3 +159,17 @@ test('a failed reset email is reported instead of promising it is on its way', a
   const store = freshStore(async () => json(500, { msg: 'Error sending recovery email' }));
   await assert.rejects(store.requestPasswordReset('taceycollections@gmail.com'), /couldn't be sent/);
 });
+
+test('a piece can have several photos; the first is the main one', () => {
+  const { sanitizeProducts } = freshStore(async () => json(200, []));
+  const [p] = sanitizeProducts([{ name: 'Bag', price: 1, images: [' a.jpg ', '', 'b.jpg'], image: 'old.jpg' }]);
+  assert.deepEqual(p.images, ['a.jpg', 'b.jpg']);
+  assert.equal(p.image, 'a.jpg', 'the shop card shows the first photo');
+
+  // Older pieces with a single photo keep working.
+  const [q] = sanitizeProducts([{ name: 'Shoe', price: 1, image: 'one.jpg' }]);
+  assert.deepEqual(q.images, ['one.jpg']);
+
+  const [r] = sanitizeProducts([{ name: 'Lots', price: 1, images: Array.from({ length: 12 }, (_, i) => `${i}.jpg`) }]);
+  assert.equal(r.images.length, 8, 'capped at 8 photos');
+});

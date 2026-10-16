@@ -29,6 +29,11 @@
       if (!Number.isFinite(price) || price < 0) throw new Error(`"${name}" has an invalid price`);
       const rawQty = Number(raw.qty);
       const qty = Number.isFinite(rawQty) ? Math.max(0, Math.floor(rawQty)) : (raw.inStock ? 1 : 0);
+      // Several photos per piece: images[0] is the main one (the shop card).
+      const images = (Array.isArray(raw.images) ? raw.images : [])
+        .map(u => String(u || '').trim()).filter(Boolean).slice(0, 8);
+      const main = String(raw.image || '').trim();
+      if (!images.length && main) images.push(main);
       return {
         id: Number.isFinite(Number(raw.id)) ? Number(raw.id) : i + 1,
         name,
@@ -36,7 +41,9 @@
         gender: String(raw.gender || 'Unisex'),
         price,
         qty,
-        image: String(raw.image || ''),
+        image: images[0] || '',
+        images,
+        sizes: Array.isArray(raw.sizes) ? raw.sizes.map(x => String(x).trim()).filter(Boolean).slice(0, 20) : [],
         description: String(raw.description || ''),
         tags: Array.isArray(raw.tags) ? raw.tags.map(t => String(t)).slice(0, 20) : [],
         inStock: qty > 0,

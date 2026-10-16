@@ -131,6 +131,13 @@ const DEPARTMENTS = {
     title: "Kids' Corner",
     tagline: 'Playful, comfy and adorable picks for the little trendsetters.',
     genders: ['Kids']
+  },
+  // /shop: everything, every department, on its shelves.
+  shop: {
+    crumb: 'Shop',
+    title: 'Everything in the shop',
+    tagline: 'Every piece Stacey has in right now, for women, men and kids.',
+    genders: ['Female', 'Male', 'Unisex', 'Kids']
   }
 };
 
@@ -362,6 +369,28 @@ function renderDeptPage() {
 
   bindProductCardEvents(container);
   observeReveals(container);
+
+  // Search across the shelves on this page.
+  const search = $('shelf-search');
+  if (search) {
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      let shown = 0;
+      container.querySelectorAll('.shelf').forEach(shelf => {
+        let inShelf = 0;
+        shelf.querySelectorAll('.product-card').forEach(card => {
+          const p = PRODUCTS.find(x => x.id === Number(card.dataset.id));
+          const hay = p ? [p.name, p.category, p.description, ...(p.tags || [])].join(' ').toLowerCase() : '';
+          const match = !q || hay.includes(q);
+          card.hidden = !match;
+          if (match) inShelf++;
+        });
+        shelf.hidden = !inShelf;
+        shown += inShelf;
+      });
+      $('shelf-search-empty').hidden = shown > 0;
+    });
+  }
 
   // Arrow scrolling
   container.querySelectorAll('.shelf').forEach(shelf => {
@@ -986,6 +1015,57 @@ function initNavbar() {
   }, { passive: true });
 }
 
+/* ── Pop-ups behave like app screens ──
+   While the product sheet, bag or saved list is open the page behind stays
+   put (swiping the sheet used to scroll the shop underneath, so closing it
+   dropped you somewhere else), and the phone's Back button closes the
+   pop-up instead of leaving the site. */
+function initSheetBehaviour() {
+  const ids = ['product-detail-modal', 'cart-drawer', 'wishlist-drawer'];
+  let lockedY = 0;
+  let ownBacks = 0;   // history.back() calls we made ourselves
+  // We restore the position ourselves; the browser's own restore on Back
+  // would jump to wherever the page was when the sheet opened (the top).
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  const anyOpen = () => ids.some(id => $(id)?.open);
+
+  const lock = () => {
+    if (document.body.classList.contains('sheet-open')) return;
+    lockedY = window.scrollY;
+    document.body.classList.add('sheet-open');
+    document.body.style.top = `-${lockedY}px`;
+  };
+  const unlock = () => {
+    if (anyOpen() || !document.body.classList.contains('sheet-open')) return;
+    document.body.classList.remove('sheet-open');
+    document.body.style.top = '';
+    window.scrollTo({ top: lockedY, behavior: 'instant' });
+  };
+
+  ids.forEach(id => {
+    const d = $(id);
+    if (!d) return;
+    const show = d.showModal.bind(d);
+    d.showModal = () => {
+      if (d.open) return;
+      lock();
+      show();
+      history.pushState({ sheet: id }, '');
+    };
+    d.addEventListener('close', () => {
+      unlock();
+      // Closed with the X, Esc or a tap outside: drop the history entry we
+      // added, so Back afterwards behaves normally.
+      if (history.state?.sheet === id) { ownBacks++; history.back(); }
+    });
+  });
+
+  window.addEventListener('popstate', () => {
+    if (ownBacks > 0) { ownBacks--; return; }
+    ids.forEach(id => { const d = $(id); if (d?.open) d.close(); });
+  });
+}
+
 function initModals() {
   // Cart toggle
   $('cart-toggle-btn')?.addEventListener('click', openCart);
@@ -1107,6 +1187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNavbar();
   initMobileNav();
   initModals();
+  initSheetBehaviour();
   initWishlist();
   observeReveals();
 
